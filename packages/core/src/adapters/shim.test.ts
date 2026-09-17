@@ -42,18 +42,22 @@ describe('resolving a Windows shim', () => {
     expect(resolveWindowsShim(shim, {}, 'win32')).toBe(exe)
   })
 
+  // PATHEXT is written in lower case here only so these tests mean something on a
+  // case-sensitive filesystem. Windows compares the extension either way, and npm writes
+  // the shim as `claude.cmd`; with `.CMD` on Linux the lookup would miss the fixture and
+  // the test would pass by finding nothing.
+  const PATHEXT = '.com;.exe;.bat;.cmd'
+
   it('finds it through PATH, the way the command is actually written', () => {
     const { dir, exe } = fixture()
-    expect(resolveWindowsShim('claude', { PATH: dir, PATHEXT: '.COM;.EXE;.BAT;.CMD' }, 'win32')).toBe(exe)
+    expect(resolveWindowsShim('claude', { PATH: dir, PATHEXT }, 'win32')).toBe(exe)
   })
 
   it('leaves a real .exe alone, because execa spawns one directly', () => {
     const { dir, exe } = fixture()
     writeFileSync(join(dir, 'claude.exe'), 'not really an executable')
-    // PATHEXT puts .EXE first, so this is what Windows itself would pick.
-    expect(resolveWindowsShim('claude', { PATH: dir, PATHEXT: '.COM;.EXE;.BAT;.CMD' }, 'win32')).toBe(
-      undefined,
-    )
+    // PATHEXT puts .exe before .cmd, so this is what Windows itself would pick.
+    expect(resolveWindowsShim('claude', { PATH: dir, PATHEXT }, 'win32')).toBe(undefined)
     expect(exe).toContain('claude.exe')
   })
 
@@ -71,6 +75,6 @@ describe('resolving a Windows shim', () => {
 
   it('gives up on a shim it cannot read, rather than throwing mid-dispatch', () => {
     expect(resolveWindowsShim(join(tmpdir(), 'delphi-no-such-shim.cmd'), {}, 'win32')).toBe(undefined)
-    expect(resolveWindowsShim('claude', { PATH: '', PATHEXT: '.CMD' }, 'win32')).toBe(undefined)
+    expect(resolveWindowsShim('claude', { PATH: '', PATHEXT }, 'win32')).toBe(undefined)
   })
 })
