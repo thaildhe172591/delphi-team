@@ -200,6 +200,19 @@ async function preCompact(payload: HookPayload): Promise<void> {
 }
 
 /**
+ * What the orchestrator may write: the ledger, the docs, and the seat files.
+ *
+ * The path is rooted first so a relative one is matched the way an absolute one is. Without
+ * that, `.delphi/projects/x/STATE.md` missed every prefix and the orchestrator was denied
+ * its own ledger — a false deny, which is the expensive direction for a gate to fail in.
+ */
+export function orchestratorMayEdit(path: string): boolean {
+  const normalised = path.replaceAll('\\', '/')
+  const rooted = normalised.startsWith('/') ? normalised : `/${normalised}`
+  return ['/.delphi/', '/docs/', '/.claude/'].some((prefix) => rooted.includes(prefix))
+}
+
+/**
  * Keep the orchestrator out of source code.
  *
  * The orchestrator owns the ledger and the docs. When it starts editing code it stops
@@ -211,10 +224,7 @@ async function preToolUse(payload: HookPayload): Promise<void> {
 
   const path = payload.tool_input?.file_path
   if (typeof path !== 'string') return
-
-  const normalised = path.replaceAll('\\', '/')
-  const allowed = ['/.delphi/', '/docs/', '/.claude/']
-  if (allowed.some((prefix) => normalised.includes(prefix))) return
+  if (orchestratorMayEdit(path)) return
 
   process.stdout.write(
     `${JSON.stringify({
