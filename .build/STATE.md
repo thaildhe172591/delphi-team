@@ -43,7 +43,7 @@ Waiting on the owner: approve Phase 0, and unblock the CLI spikes.
 
 ## Next steps
 1. Owner approves Phase 0 (mandatory stop point) and answers the two open questions in the Phase 0 report.
-2. Owner runs `claude auth login`; re-run the four spikes; update `.build/VERIFY.md` §8.
+2. Owner runs `claude auth login` (decided 2026-09-17); re-run the four spikes; update `.build/VERIFY.md` §8. **Phase 0 closes only after that** — the owner chose to finish the spikes before Phase 1.
 3. Phase 1 — repo skeleton: monorepo per PACKAGING_SPEC §2, TypeScript strict, vitest, biome, changesets,
    LICENSE/CONTRIBUTING/SECURITY/CODE_OF_CONDUCT, `ci.yml`, the `python/` shim, a trial Windows x64 binary,
    and the first `install-matrix.yml`. **Stop before creating the public GitHub repo or pushing.**

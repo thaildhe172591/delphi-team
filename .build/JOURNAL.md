@@ -14,3 +14,5 @@
 2026-09-17 | P0 | Pythia surveyed: pythia-plsql 0.14.2 (already latest, no update needed). It is a CLI, not an MCP server for Claude Code. Facts recorded in docs/research/pythia-capability-notes.md.
 2026-09-17 | P0 | Wrote .build/VERIFY.md, .build/CONFLICTS.md (C-001..C-010) and docs/research/claude-code-capabilities.md.
 2026-09-17 | P0 | ADR-0003 (bun build --compile) and ADR-0004 (drop the `dt` alias) recorded.
+2026-09-17 | P0 | Owner decision: finish the blocked spikes before Phase 1 - they will run `claude auth login` and signal.
+2026-09-17 | P0 | Owner decision: the Python wheel fails loudly instead of falling back to npx (ADR-0005, amends PACKAGING_SPEC section 1, recorded as C-011).

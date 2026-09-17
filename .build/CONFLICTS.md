@@ -37,3 +37,9 @@ reality differs. Each was marked `[VERIFY]` or implied by one. Evidence is in `.
 - `disable-model-invocation` is a real skill field.
 - Alt+V is the real Windows default for `chat:imagePaste`, and the Read tool reads images by path — R15 holds.
 - Plugin-shipped agents really do ignore `hooks`, `mcpServers` and `permissionMode`.
+
+## D. Spec amendments approved by the owner
+
+| # | Spec said | Amended to | Approved |
+|---|---|---|---|
+| C-011 | PACKAGING_SPEC §1: a `py3-none-any` fallback wheel shims to `npx --yes delphi-team@<version>`. | Platform wheels only; an unsupported platform gets a clear error naming the npm install path. No `npx` shell-out. | 2026-09-17, in chat. See ADR-0005. |

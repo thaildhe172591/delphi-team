@@ -43,3 +43,14 @@ is taken on both npm and PyPI, and is a very common personal shell alias. `delph
 ships a `delphi` executable and Embarcadero's compiler is `dcc32.exe`/`dcc64.exe`.
 **Consequences:** two command names to document and test instead of three. This follows the spec's own instruction
 rather than overriding an architectural decision, so it is not a stop point.
+
+## ADR-0005 — The Python wheel fails loudly instead of falling back to npx
+**Status:** accepted · 2026-09-17 · **approved by the owner** · amends PACKAGING_SPEC §1
+**Context:** PACKAGING_SPEC §1 specifies a `py3-none-any` fallback wheel whose shim calls
+`npx --yes delphi-team@<version>`. Phase 0 verification observed that this reintroduces a Node runtime requirement
+for exactly the pip/uvx users the platform wheels exist to serve — a hidden dependency, discovered at run time.
+**Decision:** ship the platform wheels only. On a platform with no binary, the package fails with a clear message
+naming the platform and pointing at the npm install path. Nothing shells out to `npx`.
+**Consequences:** one less code path and no hidden Node dependency; users on an unsupported platform get an
+explicit instruction instead of a silent runtime download. This amends a decision recorded in the spec bundle, so
+it was put to the owner and approved before being written down.
