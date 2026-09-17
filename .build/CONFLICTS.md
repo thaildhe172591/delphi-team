@@ -43,3 +43,10 @@ reality differs. Each was marked `[VERIFY]` or implied by one. Evidence is in `.
 | # | Spec said | Amended to | Approved |
 |---|---|---|---|
 | C-011 | PACKAGING_SPEC §1: a `py3-none-any` fallback wheel shims to `npx --yes delphi-team@<version>`. | Platform wheels only; an unsupported platform gets a clear error naming the npm install path. No `npx` shell-out. | 2026-09-17, in chat. See ADR-0005. |
+
+## E. Found by the live spikes (2026-09-17, after re-authentication)
+
+| # | Spec said | Reality | How we handle it |
+|---|---|---|---|
+| C-012 | Sessions are `interactive` or background; `delphi status` merges them with the board. | `ListAgents` returns a **third kind, `Remote Control`** — on this machine 40 of 45 peers, all `offline`. | `delphi status` and `dept status` filter to live, same-machine sessions. Offline Remote Control rows are never shown as seats. |
+| C-013 | ORCHESTRATION_SPEC §6: "seat stuck on a permission → the orchestrator reports which seat, which command, how to approve." | Confirmed implementable, and sharper than the spec assumed: a held message surfaces as `status: "waiting"`, `waitingFor: "permission prompt"`, `state: "blocked"` in `claude agents --json`. A cross-session message between sessions in **different permission modes** is held for the receiving user's approval and never reaches that session's model. | The orchestrator reads `waitingFor` to name the blockage. PROTOCOL.md gains an explicit line: **a successful send is not action** — never treat delivery as agreement, and never re-send to hurry a blocked seat. |

@@ -88,10 +88,12 @@ documented fallback; items marked **not supported** are designed around, never w
 | `claude agents --json [--all]`: `cwd`, `kind`, `startedAt`, and `id`/`state` for background entries | supported | `agent-view` |
 | A `model` or `agent` field in that JSON | **not supported** — delphi records these itself at dispatch time | `agent-view` |
 | Agent view maturity | research preview | `agent-view` |
-| Launching `claude --bg` from the Bash tool **inside** a running session | **unverified** | — |
+| Launching `claude --bg` from the Bash tool **inside** a running session | works — **not documented**; verified by spike 2026-09-17 with Claude Code 2.1.274 | — |
+| `claude logs <id>` output | raw ANSI terminal output, not structured text | observed |
 
-> That last row is the assumption `sessions` mode rests on. Until it is settled by a live spike, `manual` mode is
-> the guaranteed path and `dispatch.mode: auto` falls through to it.
+> The docs never address launching a background session from inside one, so `delphi doctor` probes it at runtime
+> rather than assuming it, and `dispatch.mode: auto` falls through to `manual` when the probe fails.
+> Seat progress is read from the project ledger, never by parsing `claude logs`.
 
 ### `manual` — Claude Desktop and the VS Code extension
 
@@ -103,7 +105,14 @@ documented fallback; items marked **not supported** are designed around, never w
 | `notify_when_idle` — an input on `SendMessage`; one-shot, same machine, main conversation only, 12 h expiry | supported | `cross-session-messaging#get-a-notice-when-another-session-goes-idle` |
 | Inbound control `crossSessionInbound`: `accept` / `hold` / `refuse` | supported | `cross-session-messaging#control-inbound-messages` |
 | Limits: ~1,000,000 char cap, sender-side burst refusal, receiver queues at most 50, repeats dropped | documented limits | `cross-session-messaging#limitations` |
-| Whether a **VS Code extension** session binds an inbox | **unverified** | — |
+| A Claude Desktop session discovers and messages a CLI background session | verified by spike 2026-09-17 | — |
+| A third session kind, `Remote Control`, appears in `ListAgents` alongside `interactive` and `bg` | observed | — |
+| A message to a session in a **different permission mode** is held for that user's approval — the receiver shows `waitingFor: "permission prompt"`, `state: "blocked"` | verified by spike 2026-09-17 | — |
+| Whether a **VS Code extension** session binds an inbox | **unverified** — no extension session was running; re-test in Phase 5 | — |
+
+> Two consequences delphi-team is built around: a successful send means the message arrived at the session, **not**
+> that its model acted on it; and a department view must filter `ListAgents` to live, same-machine sessions, or it
+> fills with offline Remote Control rows that are not seats.
 
 ## Images (Windows workflow)
 

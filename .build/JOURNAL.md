@@ -16,3 +16,12 @@
 2026-09-17 | P0 | ADR-0003 (bun build --compile) and ADR-0004 (drop the `dt` alias) recorded.
 2026-09-17 | P0 | Owner decision: finish the blocked spikes before Phase 1 - they will run `claude auth login` and signal.
 2026-09-17 | P0 | Owner decision: the Python wheel fails loudly instead of falling back to npx (ADR-0005, amends PACKAGING_SPEC section 1, recorded as C-011).
+2026-09-17 | P0 | Owner re-authenticated the CLI. Spikes unblocked.
+2026-09-17 | P0 | Spike 1 PASS: SessionStart additionalContext reached the model (DELTA-ALPHA-7X9) and the --agent definition body was loaded as the main session (ZEBRA-QUARTZ).
+2026-09-17 | P0 | Spike 2 PASS: `claude --bg --agent --model --effort --name` launched from the Bash tool inside a live session; ran to state=done. `sessions` mode and R17 unblocked. Docs never address this, so doctor will probe it at runtime.
+2026-09-17 | P0 | Spike 3 PASS: `claude agents --json` field union across six live entries = cwd,id,kind,name,pid,sessionId,startedAt,state,status (+waitingFor). No model, no agent - C-007 confirmed empirically.
+2026-09-17 | P0 | Spike 4 PASS: a Desktop session discovered a CLI-spawned background session via ListAgents and SendMessage was queued to it. Receiver then sat at waitingFor="permission prompt", state="blocked" - a held message, not a delivered one.
+2026-09-17 | P0 | New findings: ListAgents has a third kind `Remote Control` (40 of 45 peers, offline) -> C-012. Permission-block signal is readable from claude agents --json -> C-013. `claude logs` returns raw ANSI, unparseable.
+2026-09-17 | P0 | Spikes 5 (teams, 2 teammates) and 6 (VS Code extension inbox) deferred to Phase 3 and Phase 5 - neither is needed before the phase that builds the feature it tests.
+2026-09-17 | P0 | All spike background sessions stopped and removed; zero leftovers verified.
+2026-09-17 | P0 | PHASE 0 DONE. Waiting for the owner to approve Phase 1.

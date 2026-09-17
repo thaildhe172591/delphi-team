@@ -80,7 +80,10 @@ Verdicts: **VERIFIED** (docs or a local probe state it) · **UNVERIFIED** (docs 
 |---|---|---|---|
 | Mechanism | VERIFIED | `ListAgents` (discover) + `SendMessage` (deliver by name). Named pipe on native Windows; never via Anthropic servers. | R16 orchestrator discovery via `ListAgents` confirmed. |
 | Reachability | VERIFIED | Same OS user + same filesystem view. **WSL 2 and native Windows sessions on the same PC cannot reach each other.** Windows needs 2.1.234+ (we have 2.1.274). | Confirms HARNESS_DESIGN §6. Document it loudly in the README. |
-| Desktop ↔ CLI | VERIFIED / partly UNVERIFIED | Desktop's own session list shows only Desktop sessions; cross-session messaging is stated to work separately, "including terminal sessions". Whether a **VS Code extension** session binds an inbox is **UNVERIFIED**. | Needs a spike — currently blocked, see §7. |
+| Desktop ↔ CLI | **VERIFIED (local spike)** | `ListAgents` from a Claude Desktop session listed a background session spawned by the CLI seconds earlier, alongside the owner's four named interactive sessions. A `SendMessage` to it was accepted and queued. | R16's "orchestrator discovers seats via ListAgents" works across surfaces. |
+| VS Code extension ↔ others | **UNVERIFIED** | No VS Code extension session was running during the spike, so nothing could be observed. | Not on the Phase 1–2 path; `manual` mode via Desktop is proven. Re-test when the extension surface is wired up in Phase 5. |
+| **A third session kind exists** | **VERIFIED (local spike)** | `ListAgents` returned 45 peers in three kinds: `bg`, `interactive`, and **`Remote Control`** (40 of them, all `offline`). The spec anticipates only the first two. | `delphi status` must filter to live, same-machine sessions. Forty offline Remote Control rows are not seats, and a department view that lists them is useless. → C-012 |
+| Message held for approval | **VERIFIED (local spike)** | Sending from a bypass-permissions session to a manual-mode background session put the receiver at `status: "waiting"`, `waitingFor: "permission prompt"`, `state: "blocked"` — the message was **held for its user's approval**, not delivered to its model. | Exactly the signal ORCHESTRATION_SPEC §6 needs for "seat stuck on a permission": it is readable from `claude agents --json`, so the orchestrator can name the seat and what it waits on. **A successful send is not action** — the orchestrator must never treat delivery as agreement. |
 | `notify_when_idle` | **VERIFIED — not what the spec assumed** | It is an **input on the `SendMessage` tool**, not a setting. One-shot, same machine, **main conversation only** (a subagent or teammate that sets it gets no subscription), expires after 12 h. | ORCHESTRATION_SPEC §6 must call it via SendMessage from the orchestrator's main thread. → C-005 |
 | Inbound defaults | VERIFIED | `crossSessionInbound` = `accept`/`hold`/`refuse`; when unset the default derives from both sessions' permission-mode classes. Held dialogs expire per `dialogExpiry` (5 min default), at most 100 held. | `delphi doctor` should report the effective value. |
 | Limits | VERIFIED | ~1,000,000 char cap; sender-side burst refusal; the receiver queues at most **50**; identical repeats dropped. | Confirms the "batch your updates" rule in ORCHESTRATION_SPEC §5. |
@@ -108,7 +111,8 @@ Verdicts: **VERIFIED** (docs or a local probe state it) · **UNVERIFIED** (docs 
 | Background session lifecycle | VERIFIED | A separate supervisor runs them; closing the terminal does not stop work. State lives in `~/.claude/daemon/roster.json` and `~/.claude/jobs/<id>/state.json`. | Read it through `claude agents --json`, never by parsing those files. |
 | `--bg` + `--agent/--model/--effort/--name` | VERIFIED | All four combine. | `delphi dispatch` as specified. |
 | **`--bg` with `-p`** | **NOT SUPPORTED** | Rejected before session creation. | A harness must never build `claude -p --bg`. → C-006 |
-| `claude --bg` from a session's Bash | **UNVERIFIED (docs) + BLOCKED (probe)** | The docs are silent and carry no nesting warning. The in-session equivalents are `/background` and `/fork`. The local probe was blocked by expired CLI auth (§7). | **This is the single assumption `sessions` mode rests on (R17).** Must be settled before Phase 2. |
+| `claude --bg` from a session's Bash | **VERIFIED (local spike)** — docs silent | The docs never address it, but it works: `claude --bg "…" --agent spike-seat --model haiku --effort low --name spike-bg-1` run from the Bash tool **inside this session** printed `backgrounded · fb9a45c6 · spike-bg-1` and the session ran to `state: "done"`. All four flags combined. | **`sessions` dispatch and R17 are unblocked.** Because the docs are silent, `delphi doctor` probes it at runtime rather than assuming it. |
+| `claude logs <id>` output | **VERIFIED (local spike)** | Returns **raw ANSI terminal output**, not structured text — cursor moves, colour codes, status line and all. | `delphi status`/`watch` must never parse `claude logs`. Seat progress comes from the ledger the seat writes, which is what MEMORY_SPEC already mandates. |
 | Agent view status | VERIFIED | **Research preview.** On by default; `disableAgentView` turns it off. | Note it under the README's known limitations. |
 | `claude agents --json` fields | **VERIFIED — spec guess wrong** | `cwd`, `kind` (`interactive`/`background`), `startedAt` always; `id` and `state` on background only; `pid`, `status`, `waitingFor`, `sessionId`, `name` when applicable. **No `model` and no `agent` field.** | `delphi status` cannot read a seat's model or agent back — it must track that itself in `sessions.log` (MEMORY_SPEC §2 already has that file). Entries with `kind: interactive` have no `id`; do not assume they are attachable. → C-007 |
 | Model aliases | VERIFIED | `default, best, fable, sonnet, opus, haiku, sonnet[1m], opus[1m], opusplan`; pin full ids via `--model claude-sonnet-5` or `ANTHROPIC_DEFAULT_*_MODEL`. | The config's `claude-opus-4-8` for dev-be is a valid full-id form. |
@@ -149,21 +153,24 @@ Verdicts: **VERIFIED** (docs or a local probe state it) · **UNVERIFIED** (docs 
 
 ---
 
-## 8. BLOCKED — needs the owner
+## 8. Live spikes (WORKFLOW §5 Phase 0 item 3)
 
-**The `claude` CLI on this machine cannot authenticate.** Every freshly spawned CLI process returns
-`Failed to authenticate: OAuth session expired and could not be refreshed`, and `claude auth status` prints nothing.
-`~/.claude/.credentials.json` is dated 2026-09-15 and `ANTHROPIC_API_KEY` is unset. This Claude Code session works —
-the expiry affects newly spawned CLI processes only.
+The CLI's OAuth session had expired; the owner re-authenticated on 2026-09-17 and the spikes then ran.
 
-Blocked by it (WORKFLOW §5 Phase 0 item 3):
-1. Whether `additionalContext` actually reaches the model. The hook fires and emits correctly — confirmed; only the model side is untested.
-2. Whether `claude --bg` works from the Bash tool **inside** a session — the assumption `sessions` mode and R17 rest on.
-3. The two-teammate `teams` spike and the two-session `SendMessage` spike.
-4. Whether a VS Code extension session is reachable through `ListAgents`.
+| # | Spike | Result |
+|---|---|---|
+| 1 | Does `additionalContext` reach the model, and does `--agent` load the definition body when run as the main session? | **PASS — both.** A `SessionStart` hook emitting `{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"The delphi spike marker is DELTA-ALPHA-7X9."}}` plus `claude -p --agent spike-seat` returned `Delphi spike marker: DELTA-ALPHA-7X9, Codeword: ZEBRA-QUARTZ` — the injected marker and the codeword that exists only in the agent definition body. |
+| 2 | Does `claude --bg` run from the Bash tool inside a live session? | **PASS.** `--bg --agent --model --effort --name` all combined; the session backgrounded, ran and reached `state: "done"`. |
+| 3 | `claude agents --json` field shape | **PASS, and it confirms C-007.** The union of fields observed across six live entries was exactly `cwd, id, kind, name, pid, sessionId, startedAt, state, status` (+ `waitingFor` when waiting). **No `model`, no `agent`.** |
+| 4 | Cross-session discovery and delivery, Desktop → CLI background session | **PASS with an important caveat.** `ListAgents` from the Desktop session saw the CLI-spawned session; `SendMessage` was accepted and queued; the receiver then sat at `waitingFor: "permission prompt"`, `state: "blocked"` because it ran in a different permission mode. Delivery ≠ action. |
+| 5 | Two-teammate `teams` spike | **NOT RUN.** Agent Teams needs an **interactive CLI** session — `-p` never spawns teammates and Desktop does not support teams at all, so it cannot be driven from a tool call. Deferred to Phase 3, which is where `teams` mode is actually built. |
+| 6 | VS Code extension session reachable via `ListAgents` | **NOT RUN.** No extension session was open. Deferred to Phase 5, where the VS Code surface is built. Not on the Phase 1–2 path. |
 
-Fix: run `claude auth login` in an ordinary terminal, then re-run the spikes.
+Spikes 5 and 6 are deferred rather than blocked: neither is needed before the phase that implements the feature it
+tests, and both are recorded as open items in `docs/research/claude-code-capabilities.md`.
 
-```bash
-claude auth login
-```
+### Spike fixture
+
+Kept out of the repo, under the session scratchpad: an agent definition, a `SessionStart` hook that logs its stdin
+and emits `additionalContext`, and a deliberately broken hook for the fail-open check. All spike background
+sessions were stopped and removed afterwards (`claude stop` + `claude rm`, verified zero leftovers).
