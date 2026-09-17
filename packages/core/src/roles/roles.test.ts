@@ -187,3 +187,33 @@ describe('findOwnershipConflicts', () => {
     expect(findOwnershipConflicts({ 'dev-be': { owns: ['src/**'] }, qa: {} })).toEqual([])
   })
 })
+
+describe('model defaults from config', () => {
+  it('supplies a model the base role deliberately omits', () => {
+    // Base role templates ship no model or effort so the defaults live in one editable
+    // place; `models.<seat>` in config.yaml is that place.
+    const bare = { frontmatter: { name: 'qa', description: 'QA.' }, body: '## 1. Identity' }
+    const { content } = buildRole({
+      seat: 'qa',
+      base: bare,
+      modelDefaults: { model: 'opus', effort: 'high' },
+    })
+    const { data } = matter(content)
+    expect(data.model).toBe('opus')
+    expect(data.effort).toBe('high')
+  })
+
+  it('is outranked by every layer above it', () => {
+    const bare = { frontmatter: { name: 'qa', description: 'QA.' }, body: '## 1. Identity' }
+    const { content } = buildRole({
+      seat: 'qa',
+      base: bare,
+      modelDefaults: { model: 'opus', effort: 'high' },
+      seatConfig: { capabilities: [], owns: [], effort: 'xhigh' },
+      dispatchOverride: { model: 'haiku' },
+    })
+    const { data } = matter(content)
+    expect(data.model).toBe('haiku') // dispatch wins
+    expect(data.effort).toBe('xhigh') // seat config beats the default
+  })
+})

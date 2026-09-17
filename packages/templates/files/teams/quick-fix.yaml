@@ -1,0 +1,10 @@
+name: quick-fix
+description: A small, well-understood bug or change. One developer, one reviewer.
+seats:
+  - seat: orchestrator
+  - seat: dev-be
+  - seat: reviewer
+limits:
+  max_active: 2
+dispatch:
+  mode: auto

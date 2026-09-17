@@ -20,6 +20,14 @@ export interface BuildRoleInput {
   base: RoleSource
   /** Capability packs, in the order the seat declares them. */
   capabilities?: CapabilitySource[]
+  /**
+   * `models.<seat>` from config.yaml — the per-seat default.
+   *
+   * Base role templates deliberately carry no model or effort: the recommended defaults
+   * live in one visible, editable place instead of being baked into files the package
+   * regenerates (ROLES_SPEC section 1).
+   */
+  modelDefaults?: { model?: string; effort?: string } | undefined
   /** `seats.<seat>` from config.yaml. */
   seatConfig?: SeatConfig | undefined
   /** Per-project override from `team.yaml`. */
@@ -57,8 +65,9 @@ const PROJECT_BLOCK_PLACEHOLDER = [
  *   1. the dispatch or command-line override
  *   2. `team.yaml` for this project
  *   3. `seats.<seat>` in config.yaml
- *   4. capability frontmatter, and only the fields capabilities may contribute
- *   5. the base role
+ *   4. `models.<seat>` in config.yaml, the per-seat default
+ *   5. capability frontmatter, and only the fields capabilities may contribute
+ *   6. the base role
  */
 export function buildRole(input: BuildRoleInput): BuildRoleResult {
   const capabilities = input.capabilities ?? []
@@ -196,7 +205,7 @@ function mergeFrontmatter(input: BuildRoleInput, capabilities: CapabilitySource[
   if (input.seatConfig?.description) merged.description = input.seatConfig.description
 
   // Lowest to highest, so the last write wins.
-  for (const layer of [input.seatConfig, input.teamOverride, input.dispatchOverride]) {
+  for (const layer of [input.modelDefaults, input.seatConfig, input.teamOverride, input.dispatchOverride]) {
     if (layer?.model) merged.model = layer.model
     if (layer?.effort) merged.effort = layer.effort
   }

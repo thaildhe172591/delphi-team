@@ -74,8 +74,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build && pnpm test
 
-  version-lockstep:
-    name: version lockstep
+  generated-files:
+    name: generated files are current
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -85,6 +85,9 @@ jobs:
       # One version across npm, PyPI, the plugin and the release
       # (docs/spec/PACKAGING_SPEC.md section 1).
       - run: node scripts/sync-version.mjs --check
+      # The embedded template module is committed. A template edited without regenerating
+      # it would ship the old text from every distribution, silently.
+      - run: node scripts/build-templates.mjs --check
 
   unicode-paths:
     name: paths with spaces and non-ASCII

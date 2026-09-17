@@ -90,4 +90,18 @@ export {
   type TaskStatus,
   TaskStatusSchema,
 } from './schema/work.js'
+export {
+  hasTemplate,
+  listCapabilities,
+  listRoles,
+  listTeams,
+  listTemplates,
+  readCapability,
+  readProtocol,
+  readRole,
+  readSampleConfig,
+  readTeam,
+  readTemplate,
+  TemplateError,
+} from './templates/index.js'
 export { compareVersions, MIN_CLAUDE_VERSION, parseClaudeVersion, satisfiesMinimum } from './version.js'

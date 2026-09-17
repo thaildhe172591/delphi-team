@@ -1,0 +1,93 @@
+version: 1
+
+# The language seats answer you in. Messages between agents stay terse and carry ids.
+language: en
+
+# How many characters of the project slug go into a session name (ocr-dev-be).
+project_prefix_len: 8
+
+defaults:
+  team: feature
+  track: standard # quick | standard | enterprise
+
+dispatch:
+  # auto picks a mode from the environment: Agent Teams when this is an interactive CLI
+  # session and no seat needs a different effort from the orchestrator, background
+  # sessions when they can be launched, and manual otherwise.
+  mode: auto
+  surface: none # wt | tmux | vscode | desktop | none
+  # Three to five seats working at once coordinate well. More do not.
+  max_active: 5
+  hard_limit: 8
+  confirm_before_dispatch: true
+  teams:
+    # Maps onto Claude Code teammateMode. Split panes need tmux or iTerm2, so on Windows
+    # this stays in-process.
+    teammate_mode: in-process
+    # Maps onto subagentPromptCacheTtl. Left unset, teammates land in the 5-minute bucket.
+    subagent_cache_ttl: 1h
+
+# Per-seat defaults. These live here rather than in the role templates so there is one
+# place to change them, and so a package upgrade never overwrites your choice.
+models:
+  orchestrator: { model: fable, effort: high } # xhigh when planning something large
+  ba: { model: opus, effort: xhigh }
+  pm: { model: opus, effort: xhigh }
+  techlead: { model: opus, effort: xhigh }
+  dev-be: { model: opus, effort: xhigh } # a hard story may warrant max
+  dev-fe: { model: opus, effort: xhigh }
+  db-engineer: { model: opus, effort: xhigh }
+  qa: { model: opus, effort: high }
+  tester: { model: opus, effort: high }
+  reviewer: { model: opus, effort: high }
+
+# Compose seats here: a base role, the capability packs merged into it, and what it owns.
+# Uncomment to make the backend developer also the database engineer, with Pythia:
+#
+# seats:
+#   dev-be:
+#     base: dev-be
+#     capabilities: [db-engineer, pythia-oracle]
+#     owns: ["src/api/**", "db/**"]
+#     description: "Backend and Oracle: APIs, procedures, packages, queries."
+seats: {}
+
+context:
+  # Passed to claude --autocompact. Lower than the default so the orchestrator compacts on
+  # its own terms rather than at the context limit.
+  orchestrator_autocompact: 400k
+  # Injected at session start. Claude Code spills anything over 10,000 characters to a file.
+  session_start_budget_kb: 4
+  resume_budget_tokens: 12000
+
+resume:
+  # Report the situation and wait, rather than dispatching on yesterday assumptions.
+  auto_continue: false
+  journal_tail: 50
+  decisions_tail: 10
+
+memory:
+  # Claude Code preloads the first 200 lines or 25 KB of MEMORY.md. Stay under it.
+  compact_threshold_lines: 180
+
+assets:
+  dir: .delphi/assets
+  max_mb: 10
+
+safety:
+  db_default: read-only
+  allow_production: false
+  # Regexes applied to report text before it is written.
+  redact_patterns: []
+
+worktree:
+  copy_untracked: [".env"]
+
+privacy:
+  # The ledger is committed so another machine, or a colleague, can rebuild the context.
+  commit_ledger: true
+  private_paths: []
+
+budget:
+  # Parallel sessions consume quota in parallel. Warn past this many.
+  warn_parallel_sessions: 4

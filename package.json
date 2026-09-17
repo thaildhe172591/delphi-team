@@ -7,7 +7,7 @@
   },
   "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "build": "pnpm -r --filter \"./packages/**\" build",
+    "build": "pnpm build:templates && pnpm -r --filter \"./packages/**\" build",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
@@ -15,7 +15,8 @@
     "lint:fix": "biome check --write .",
     "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/cli",
     "sync-version": "node scripts/sync-version.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test",
+    "build:templates": "node scripts/build-templates.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",

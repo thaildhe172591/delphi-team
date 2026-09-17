@@ -1,0 +1,5 @@
+version: 1
+# backlog -> ready -> doing -> review -> done, plus blocked and cancelled.
+# ready needs acceptance criteria and an owned file list; done needs a report with evidence;
+# blocked needs a reason. Use `delphi task move` rather than editing this by hand.
+tasks: []

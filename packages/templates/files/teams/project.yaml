@@ -1,0 +1,23 @@
+name: project
+description: Long-running work with a full department. Every seat exists; only a few work at once.
+seats:
+  - seat: orchestrator
+  - seat: ba
+  - seat: pm
+  - seat: techlead
+  - seat: dev-be
+  - seat: dev-fe
+  - seat: db-engineer
+    when: phase in [design, build]
+  - seat: qa
+    when: phase in [build, verify]
+  - seat: tester
+    when: phase in [build, verify]
+  - seat: reviewer
+    when: phase in [build, verify]
+limits:
+  # Ten seats exist, five work at a time. Agent Teams guidance is three to five active
+  # members; past that, coordination costs more than the extra hands return.
+  max_active: 5
+dispatch:
+  mode: auto
