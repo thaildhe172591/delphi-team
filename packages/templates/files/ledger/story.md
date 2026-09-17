@@ -12,7 +12,7 @@ acceptance: [] # statements someone could check. No acceptance, no ready.
 verify: "<the command that proves it works>"
 attachments: []
 report_to: orchestrator
-handoff_to:
+# handoff_to: <seat>   # uncomment when another seat takes this on
 created: <ISO time>
 updated: <ISO time>
 ---

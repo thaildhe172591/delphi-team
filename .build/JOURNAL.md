@@ -56,3 +56,8 @@
 2026-09-17 | P2c | Dogfooded: `delphi init` on this repository, then a real project ledger with the remaining phases as stories. init is idempotent, doctor reports clean, and the board gates refuse `ready` without acceptance criteria and `done` without a report.
 2026-09-17 | P2c | 244 tests pass.
 2026-09-17 | P2c | CI found an ordering bug the local machine hid: `pnpm check` ran typecheck before build, so the CLI typechecked against core generated .d.ts files that do not exist on a clean checkout. Locally a stale dist masked it. The order is now lint -> build -> typecheck -> test, and it was verified from no dist at all.
+2026-09-17 | P3a | Dispatch decisions moved into core as pure functions: choosing a mode from the environment, and planning which seats start. The pre-spawn checks refuse two stories claiming the same files, two seats owning one path, a story with no acceptance criteria, and more active seats than the team can coordinate.
+2026-09-17 | P3a | Commands added: dept up/status/down, shift end, handoff new/list, inbox, next.
+2026-09-17 | P3a | Two defects found by running it. A story with a bare `handoff_to:` parsed as null and failed the whole schema, and the CLI then reported "no acceptance criteria" - the symptom, not the cause. Making the reader say what was actually wrong then exposed the real root cause underneath: YAML turns an unquoted ISO timestamp into a Date, which the schema rejected. Every story would have hit it. Fixed in the schema, which fixes it for every reader.
+2026-09-17 | P3a | Spike script written for the owner to run: scripts/spike-agent-teams.mjs. Agent Teams needs an interactive CLI session, so it cannot be driven from a tool call.
+2026-09-17 | P3a | 276 tests pass.

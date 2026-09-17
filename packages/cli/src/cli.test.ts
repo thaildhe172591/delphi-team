@@ -72,13 +72,30 @@ describe('the command tree', () => {
       'dispatch',
       'snap',
       'hook',
+      'dept',
+      'shift',
+      'handoff',
+      'inbox',
+      'next',
     ]) {
       expect(names, `${name} is missing`).toContain(name)
     }
   })
 
   it('leaks no subcommand to the top level', () => {
-    for (const leaked of ['list', 'new', 'add', 'move', 'show', 'build', 'tail']) {
+    for (const leaked of [
+      'list',
+      'new',
+      'add',
+      'move',
+      'show',
+      'build',
+      'tail',
+      'up',
+      'down',
+      'status',
+      'end',
+    ]) {
       expect(names, `${leaked} escaped its parent`).not.toContain(leaked)
     }
   })

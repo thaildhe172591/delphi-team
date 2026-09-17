@@ -138,3 +138,43 @@ describe('BoardSchema', () => {
     expect(BoardSchema.parse({}).tasks).toEqual([])
   })
 })
+
+describe('timestamps as YAML actually produces them', () => {
+  const base = {
+    id: 'T-012',
+    title: 'Accept OCR uploads',
+    type: 'feature',
+    owner: 'dev-be',
+    status: 'ready',
+  }
+
+  it('accepts a quoted timestamp', () => {
+    const story = StorySchema.parse({
+      ...base,
+      created: '2026-09-17T10:00:00+07:00',
+      updated: '2026-09-17T10:00:00+07:00',
+    })
+    expect(story.created).toBe('2026-09-17T10:00:00+07:00')
+  })
+
+  it('accepts the Date an unquoted ISO value becomes', () => {
+    // YAML turns `created: 2026-09-17T10:00:00+07:00` into a Date. Insisting on a string
+    // rejects the form people write by hand, and the error points at the wrong thing.
+    const when = new Date('2026-09-17T03:00:00Z')
+    const story = StorySchema.parse({ ...base, created: when, updated: when })
+    expect(story.created).toBe('2026-09-17T03:00:00.000Z')
+  })
+
+  it('accepts a Date on the board and in the project index too', () => {
+    const when = new Date('2026-09-17T03:00:00Z')
+    const board = BoardSchema.parse({
+      version: 1,
+      tasks: [{ id: 'T-1', title: 'x', status: 'ready', owner: 'qa', updated: when }],
+    })
+    expect(board.tasks[0]?.updated).toBe('2026-09-17T03:00:00.000Z')
+  })
+
+  it('still refuses something that is neither', () => {
+    expect(StorySchema.safeParse({ ...base, created: 42, updated: 42 }).success).toBe(false)
+  })
+})

@@ -7,6 +7,21 @@ export {
   type DispatchOptions,
   parseDispatchId,
 } from './adapters/claude.js'
+export {
+  type DepartmentInput,
+  type DepartmentPlan,
+  guardAdmits,
+  type Problem,
+  planDepartment,
+  type SeatPlan,
+  spawnPrompt,
+} from './dispatch/department.js'
+export {
+  chooseDispatchMode,
+  type DispatchDecision,
+  type DispatchFacts,
+  seatsNeedingOwnEffort,
+} from './dispatch/mode.js'
 export { type Check, type DoctorFacts, type Level, runChecks, worstLevel } from './doctor/checks.js'
 export { DELPHI_BLOCK, mergeClaudeMd, removeClaudeMd } from './init/claudemd.js'
 export {

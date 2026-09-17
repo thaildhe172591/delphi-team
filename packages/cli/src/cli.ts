@@ -1,4 +1,5 @@
 import { Command } from 'commander'
+import { deptCommand, handoffCommand, inboxCommand, nextCommand, shiftCommand } from './commands/dept.js'
 import { doctorCommand } from './commands/doctor.js'
 import { hookCommand } from './commands/hook.js'
 import { initCommand } from './commands/init.js'
@@ -46,6 +47,12 @@ export function createProgram(version: string = __DELPHI_VERSION__): Command {
   program.addCommand(storyCommand())
   program.addCommand(taskCommand())
   program.addCommand(reportCommand())
+
+  program.addCommand(deptCommand())
+  program.addCommand(shiftCommand())
+  program.addCommand(handoffCommand())
+  program.addCommand(inboxCommand())
+  program.addCommand(nextCommand())
 
   program.addCommand(seatCommand())
   program.addCommand(startCommand())

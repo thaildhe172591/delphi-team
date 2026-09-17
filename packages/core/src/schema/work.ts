@@ -32,6 +32,17 @@ export const TASK_TRANSITIONS: Readonly<Record<TaskStatus, readonly TaskStatus[]
 export const StoryTypeSchema = z.enum(['feature', 'bug', 'spike', 'chore'])
 
 /**
+ * A timestamp, however YAML felt like parsing it.
+ *
+ * YAML turns an unquoted ISO-8601 value into a Date, and a quoted one into a string, so a
+ * schema that insists on a string rejects the form people actually write by hand. Both are
+ * accepted and normalised to ISO text, because the ledger is read by humans too.
+ */
+export const TimestampSchema = z
+  .union([z.string().min(1), z.date()])
+  .transform((value) => (typeof value === 'string' ? value : value.toISOString()))
+
+/**
  * A story is the handover package for one piece of work (MEMORY_SPEC section 3.3).
  * Every field here exists so a fresh session can pick the work up with no conversation
  * history: what to change, what is out of bounds, what "done" means, and how to prove it.
@@ -57,8 +68,8 @@ export const StorySchema = z.object({
   attachments: z.array(z.string()).default([]),
   report_to: SeatIdSchema.default('orchestrator'),
   handoff_to: SeatIdSchema.optional(),
-  created: z.string().min(1),
-  updated: z.string().min(1),
+  created: TimestampSchema,
+  updated: TimestampSchema,
 })
 export type Story = z.infer<typeof StorySchema>
 
@@ -71,7 +82,7 @@ export const BoardEntrySchema = z.object({
   type: StoryTypeSchema.default('feature'),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
   depends_on: z.array(z.string()).default([]),
-  updated: z.string().min(1),
+  updated: TimestampSchema,
   /** Why it is blocked. Required when status is `blocked`, so the board never just stalls. */
   blocked_reason: z.string().optional(),
 })
@@ -95,7 +106,7 @@ export const ProjectIndexSchema = z.object({
           .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'must be lowercase and hyphenated'),
         title: z.string().min(1),
         status: z.enum(['open', 'closed']).default('open'),
-        updated: z.string().min(1),
+        updated: TimestampSchema,
       }),
     )
     .default([]),
