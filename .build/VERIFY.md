@@ -168,7 +168,29 @@ The CLI's OAuth session had expired; the owner re-authenticated on 2026-09-17 an
 
 | 7 | `wt -w 0 split-pane` for the `--surface wt` terminal split | **NOT RUN.** `wt --help` opens its own window, so the syntax could not be read from a tool call, and running it opens panes on the owner's screen. The invocation follows the documented form and `dept up --surface` **prints it before running it**, so it can be read first. Settle it alongside the Agent Teams spike. |
 
-Spikes 5 and 6 are deferred rather than blocked: neither is needed before the phase that implements the feature it
+### Spike 5 result — Agent Teams, run by the owner 2026-09-17
+
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, Claude Code 2.1.274, lead on `claude-opus-5[1m]`.
+
+| Question | Answer |
+|---|---|
+| Was a team created? | **Yes** — `~/.claude/teams/session-0b74e053/config.json` exists. |
+| Did the named agents become teammates? | **No.** The team config lists exactly one member, `team-lead`. The two named agents ran as **background subagents**: `SubagentStart` and `SubagentStop` fired, with subagent ids. No `inboxes/` directory was created. |
+| Did `TaskCreated` / `TaskCompleted` / `TeammateIdle` fire? | **No, not once.** |
+| Was the shared task list usable? | **No.** The lead reported plainly: "no task tools exist in this session — TaskCreate/TaskList/TodoWrite are not in my toolset and not available via ToolSearch". `~/.claude/tasks/session-0b74e053/` holds no files. |
+| Did each agent honour the `model` in its definition? | **Yes.** Both reported `claude-haiku-4-5-20251001` while the lead ran `claude-opus-5[1m]`. |
+| Did an agent receive a `skills` entry from its definition? | **Yes** — alpha reported `skill visible: yes`. The docs say a *teammate* never does; a *subagent* evidently does. The distinction matters. |
+| Effort per agent | Not separable from this run, since these were subagents rather than teammates. |
+
+**New payload fields, not in the documentation we read:**
+
+- `SessionStart` also carries `scratchpad_dir` and `model` (e.g. `claude-opus-5[1m]`).
+- `SubagentStart` carries `prompt_id`, `agent_id`, `agent_type`, and a `cwd` of `<project>/.claude/agents` — **not** the project root.
+- `SubagentStop` carries `permission_mode`, `stop_hook_active`, `agent_transcript_path`, **`last_assistant_message`**, `background_tasks` and `session_crons`.
+
+**What this changes.** `teams` mode cannot be built on the shared task list or the team hooks: neither was reachable here. `SubagentStop` is the signal that actually arrives, and `last_assistant_message` carries the seat's closing report, which is more useful than an idle notification. delphi already treats `board.yaml` as the source of truth, so nothing is lost — but the spec's picture of teams mode was optimistic, and pretending otherwise would have produced a feature that silently does nothing. → C-015
+
+Spikes 6 is deferred rather than blocked: neither is needed before the phase that implements the feature it
 tests, and both are recorded as open items in `docs/research/claude-code-capabilities.md`.
 
 ### Spike fixture

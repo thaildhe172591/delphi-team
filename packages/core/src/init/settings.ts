@@ -28,6 +28,14 @@ export const DELPHI_HOOKS = {
     matcher: '^(Edit|Write|NotebookEdit)$',
     timeout: 5,
   },
+  SubagentStop: {
+    // The signal that actually arrives. A spike with Agent Teams enabled produced
+    // background subagents rather than teammates, so TaskCreated/TaskCompleted/TeammateIdle
+    // never fired -- but SubagentStop did, and it carries `last_assistant_message`, which
+    // is the seat's closing report. See .build/VERIFY.md spike 5.
+    purpose: 'record what each seat concluded when it stopped',
+    timeout: 10,
+  },
 } as const
 
 export type DelphiHookEvent = keyof typeof DELPHI_HOOKS

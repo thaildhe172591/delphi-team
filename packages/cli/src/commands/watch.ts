@@ -2,7 +2,6 @@ import {
   BoardSchema,
   ClaudeAdapter,
   type ClaudeAgentEntry,
-  openTasks,
   readJournalTail,
   readOr,
   readYaml,
@@ -112,7 +111,7 @@ export function watchCommand(): Command {
       while (!stop) {
         const view = await snapshot(context, slug)
         // Clear and redraw. Nothing fancier: a dashboard is not worth a dependency.
-        process.stdout.write('[2J[H')
+        process.stdout.write('\u001B[2J\u001B[H')
         render(report, view)
         report.line(`\nrefreshing every ${options.interval}s · Ctrl+C to stop`)
         await new Promise((resolve) => setTimeout(resolve, interval))

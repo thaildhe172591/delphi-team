@@ -1,6 +1,7 @@
 import { appendFile, mkdir, readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
+  appendJournal,
   BoardSchema,
   isoNow,
   openTasks,
@@ -39,6 +40,9 @@ interface HookPayload {
   tool_name?: string
   tool_input?: { file_path?: string; [key: string]: unknown }
   trigger?: string
+  /** SubagentStop: the seat's closing message, which is its report in miniature. */
+  last_assistant_message?: string
+  agent_id?: string
   [key: string]: unknown
 }
 
@@ -58,6 +62,9 @@ export function hookCommand(): Command {
             break
           case 'PreToolUse':
             await preToolUse(payload)
+            break
+          case 'SubagentStop':
+            await subagentStop(payload)
             break
           default:
             // An event we do not handle is not an error; the settings file may be ahead.
@@ -220,6 +227,34 @@ async function preToolUse(payload: HookPayload): Promise<void> {
       },
     })}\n`,
   )
+}
+
+/**
+ * Record what a seat concluded, the moment it stops.
+ *
+ * This is the event that actually fires. A spike with Agent Teams enabled produced
+ * background subagents rather than teammates, so the three team events never arrived --
+ * but this one did, carrying `last_assistant_message`. Writing the first line of it into
+ * the journal means a seat that stops without filing a report still leaves a trace.
+ */
+async function subagentStop(payload: HookPayload): Promise<void> {
+  const seat = payload.agent_type
+  if (!seat) return
+
+  const context = await projectContext(payload)
+  if (!context.initialised) return
+
+  const index = await readYaml(context.paths.index, ProjectIndexSchema, { version: 1, projects: [] })
+  const slug = index.projects.find((p) => p.status === 'open')?.slug
+  if (!slug) return
+
+  const summary = (payload.last_assistant_message ?? '').split('\n')[0]?.trim() ?? ''
+  await appendJournal(context.paths.project(slug).journal, {
+    id: '-',
+    seat,
+    event: 'seat stopped',
+    ...(summary ? { detail: summary.slice(0, 200) } : {}),
+  })
 }
 
 async function countUnread(dir: string | null): Promise<number> {

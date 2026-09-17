@@ -56,3 +56,10 @@ reality differs. Each was marked `[VERIFY]` or implied by one. Evidence is in `.
 | # | Issue | Why it matters |
 |---|---|---|
 | C-014 | WORKFLOW §2 fixed the Node floor at `engines >=20`, but Node 20 reached end of life on 2026-04-30. Holding it cost us the current lines of execa and commander, both of which require Node 22. | **Resolved 2026-09-17: the owner raised the floor to `>=22`.** See ADR-0009. The spec line is annotated in place so a later session does not follow the stale value, execa and commander are back on their current releases, and the CI floor job now guards Node 22. |
+
+## G. Found by the Agent Teams spike (2026-09-17, run by the owner)
+
+| # | Spec said | Reality | How we handle it |
+|---|---|---|---|
+| C-015 | ORCHESTRATION_SPEC §12 installs `TaskCreated`, `TaskCompleted` and `TeammateIdle` as quality gates, and R11 assumes a shared task list. | With Agent Teams enabled, a team was created with **only the lead as a member**. The named agents ran as background **subagents**, so `SubagentStart`/`SubagentStop` fired and the three team events never did. The task tools were absent entirely, so there was no shared list to gate. | delphi installs a **`SubagentStop`** hook, which is the signal that actually arrives, and records each seat closing message from `last_assistant_message`. The three team hooks stay installed for the environments where they do fire, but nothing depends on them. `board.yaml` remains the source of truth, which it already was — so the department still works, it simply does not pretend the native list exists. |
+| C-016 | ROLES_SPEC §1 and MEMORY_SPEC §1 assume a seat may never receive `skills` from its frontmatter. | True for a **teammate**; **not** true for a subagent, which did receive one in the spike. | The rule stands as written — every mandatory procedure lives in the role body — because it must hold in the weakest case. But `doctor` no longer warns as if skills never arrive; it says they arrive for a subagent and not for a teammate. |
