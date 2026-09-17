@@ -3,7 +3,7 @@
 You are picking up a build in progress on a different machine from the one that started it.
 This file is the whole context. Read it, then `.build/STATE.md` for where the build stands.
 
-Written 2026-09-17, at the end of Phase 5.
+Written 2026-09-17, at the end of Phase 5, after running a real department on a real project.
 
 ---
 
@@ -73,6 +73,12 @@ requirement is met.
 
 ### Carried debt
 
+0. **`dispatch.confirm_before_dispatch` is a lie.** Declared in `packages/core/src/schema/config.ts`,
+   defaults to `true`, appears in the shipped config — and nothing reads it. The config promises a
+   confirmation before spending quota that does not exist. It is in the spec (CUSTOMIZATION_SPEC §188), so
+   implement it or amend the spec; both need the owner. If implemented it must only prompt when
+   `process.stdout.isTTY` — the orchestrator runs `dept up` through the Bash tool in a non-interactive
+   session, and a prompt there would hang the department.
 1. `packages/cli` has **no README**, so the npm page would be blank. Needed before any publish.
 2. `delphi cost` counts sessions, not money, and says so in its own output. Whether to keep it at
    all is the owner's call at release (C-009).
@@ -137,6 +143,26 @@ Every one of these cost a debugging session. They are listed so they cost you no
 - **Tests that fake Windows must use lower-case `PATHEXT`**, or they find nothing on Linux CI and
   pass for the wrong reason.
 
+### Found by running a department live
+
+The whole of this list came from one afternoon of actually using it, and none of it had a failing test:
+
+- **A seat that finished blocked the department.** A background session that completed its turn sits at
+  `state: blocked, status: idle`. It is not `done` — that only happens once it is stopped. The active-limit
+  filter was `state !== 'done'`, so every seat that had ever run still counted against the limit and the
+  next story could never start. `isWorking()` in `packages/cli/src/commands/dept.ts` is that fix; do not
+  loosen it back to "not done".
+- **Windows Terminal cannot launch a bare `claude`.** It starts the pane command itself and does not resolve
+  PATHEXT, so the npm `.cmd` shim fails with `0x80070002` in a pane you then close by hand. Panes launch the
+  resolved `.exe` via `claudeBinary()`. Same root as C-017, one layer out.
+- **`existsSync` is the wrong probe for a Store-installed executable.** `wt.exe` is an app execution alias —
+  a reparse point Node cannot stat, so `existsSync`, `lstatSync` and even `readdirSync` on its directory all
+  say ENOENT for a program `where` finds and the shell runs. `resolveSurface` deliberately does not probe.
+- **`watch` treated every background session on the machine as a seat**, and **read the journal template's
+  own format line as an event**. Both fixed; both had looked right on the page for weeks.
+- **A team can name a seat the project never built**, and `dept up` held it in silence, so the review step
+  went missing without anyone noticing.
+
 ### The largest finding
 
 **Agent Teams does not work the way the spec assumed.** With
@@ -154,10 +180,20 @@ Phase 2c alone came from execution, not review. Do not mark work done on a readi
 ## 7. How to prove the thing works
 
 ```bash
-pnpm check                      # lint, build, typecheck, 345 tests
+pnpm check                      # lint, build, typecheck, 357 tests
 node scripts/loop-lab.mjs       # the loop end to end, for free
 node packages/cli/dist/index.js doctor
 ```
+
+To install it the way it will actually ship, which also checks the published artifact:
+
+```bash
+cd packages/cli && npm pack && npm install -g ./delphi-team-0.1.0.tgz
+```
+
+**delphi has to be on PATH**, not just built: the `settings.json` that `delphi init` writes calls a bare
+`delphi hook <event>`. Without it the hooks fail open and silently do nothing, which looks exactly like
+working.
 
 `scripts/loop-lab.mjs` builds a scratch project in a temp directory and runs `delphi loop`
 against `scripts/fake-claude.mjs` — a stand-in binary — through five stop conditions plus the

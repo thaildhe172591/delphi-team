@@ -1,6 +1,6 @@
 # BUILD STATE
 
-Updated: 2026-09-17 · **Phase 5 (Automation) — DONE.** Waiting on the owner to approve Phase 6.
+Updated: 2026-09-17 evening · **Phase 5 (Automation) — DONE, and run live.** Waiting on the owner to approve Phase 6.
 
 ## Current phase
 Phases 0 to 3 complete. The repository is public, CI runs on every push, and delphi is set up on itself.
@@ -43,6 +43,11 @@ scripts/            sync-version · build-binaries · build-templates
 ```
 
 ## Measured, not assumed
+- **357 tests pass**, and the CLI is installed from its own npm tarball rather than a link, so the published
+  artifact is what was exercised: 80 KB, four files, core bundled, dependencies resolve.
+- **A real department ran on a real project.** dev-be took a story from `ready` to `review` with `npm test`
+  green, filed a report, handed over. The orchestrator drove it from a `claude` session and reported two
+  defects in delphi itself while doing so.
 - **345 tests pass.** `packages/core` coverage was 92/85/94/93 at the end of 2a and has grown since.
 - The MCP server was checked three ways: unit tests, a real JSON-RPC exchange over stdio, and registration
   through `claude mcp add`, which correctly held the project-scoped server as pending approval.
@@ -69,9 +74,33 @@ scripts/            sync-version · build-binaries · build-templates
 7. The loop counted review rounds, so a seat that stopped without touching the board left the next decision
    identical to the last one and the same story was dispatched forever. It counts every dispatch now.
 
+**Found by running a department live, on 2026-09-17 — none of these had a test that caught them:**
+
+8. **A finished seat blocked the whole department.** A background session that has completed its turn sits at
+   `state: blocked, status: idle`; it is not `done`, which happens only once it is stopped. The active-limit
+   filter was `state !== 'done'`, so every seat that had ever run still counted, and the next story could
+   never start. Active now means working.
+9. **`watch` and `dept status` reported every background session on the machine as a seat.** One from an
+   unrelated project appeared named after itself and marked blocked. Both now join against `sessions.log`.
+10. **The journal template was read as an event.** `parseEntry` accepted any line with four pipe-separated
+    fields, and the template documents its own format on a line that has four. `watch` printed "SO ti" where
+    the time goes. A line must start with a timestamp now.
+11. **The orchestrator gate denied a relative path to its own ledger.** The allow-list matched `/.delphi/`
+    with a leading separator, so an absolute path passed and a relative one did not.
+12. **Windows Terminal could not launch the pane command.** It starts the command itself and does not resolve
+    PATHEXT, so a bare `claude` — the npm `.cmd` shim — failed with "the system cannot find the file
+    specified". Panes launch the resolved `.exe`. Same root as C-017, one layer out.
+13. **A team could name a seat the project never built.** `quick-fix` names a reviewer; a `feature` project
+    has none, so the plan held it as "nothing assigned yet" and the review step went missing silently.
+
 Each has a test now.
 
 ## Open items
+0. **`dispatch.confirm_before_dispatch` is declared, defaults to `true`, and is never read** — the config
+   promises a confirmation gate before spending quota that does not exist. It is in the spec
+   (CUSTOMIZATION_SPEC §188), so implementing or removing it is the owner's call. If implemented, it must
+   only prompt when `process.stdout.isTTY`: the orchestrator runs `dept up` through the Bash tool in a
+   non-interactive session and a prompt there would hang the department.
 1. `packages/cli` has no README, so the npm page would be blank. Needed before the first publish.
 2. `delphi cost` ships counting sessions rather than money, and says so in its own output. Whether to
    keep it at all is still the owner's call at release (C-009).
