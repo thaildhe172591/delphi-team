@@ -74,6 +74,12 @@ Verdicts: **VERIFIED** (docs or a local probe state it) · **UNVERIFIED** (docs 
 
 ---
 
+## 3b. Spawning on Windows (found in Phase 5)
+
+| Question | Status | Evidence |
+|---|---|---|
+| Can `claude --bg` carry a multi-line prompt on Windows? | **VERIFIED, after a fix.** Not through what is on PATH: `claude` resolves to an npm `.cmd` shim, and a `.cmd` runs through `cmd.exe`, which treats a line break as a command separator with no way to escape it. execa refuses to pass one rather than allow the injection, so every dispatch failed before the session was created. | Reproduced against `claude.exe` 2.1.274 on 2026-09-17: the same multi-line argument is refused for `claude` and accepted for the `.exe` the shim names. delphi resolves the shim itself (C-017). |
+
 ## 4. Cross-session messaging (`sessions` and `manual` modes)
 
 | Item | Verdict | Finding | Impact |
@@ -81,7 +87,7 @@ Verdicts: **VERIFIED** (docs or a local probe state it) · **UNVERIFIED** (docs 
 | Mechanism | VERIFIED | `ListAgents` (discover) + `SendMessage` (deliver by name). Named pipe on native Windows; never via Anthropic servers. | R16 orchestrator discovery via `ListAgents` confirmed. |
 | Reachability | VERIFIED | Same OS user + same filesystem view. **WSL 2 and native Windows sessions on the same PC cannot reach each other.** Windows needs 2.1.234+ (we have 2.1.274). | Confirms HARNESS_DESIGN §6. Document it loudly in the README. |
 | Desktop ↔ CLI | **VERIFIED (local spike)** | `ListAgents` from a Claude Desktop session listed a background session spawned by the CLI seconds earlier, alongside the owner's four named interactive sessions. A `SendMessage` to it was accepted and queued. | R16's "orchestrator discovers seats via ListAgents" works across surfaces. |
-| VS Code extension ↔ others | **UNVERIFIED** | No VS Code extension session was running during the spike, so nothing could be observed. | Not on the Phase 1–2 path; `manual` mode via Desktop is proven. Re-test when the extension surface is wired up in Phase 5. |
+| VS Code extension ↔ others | **UNVERIFIED** | No VS Code extension session was running during the spike, so nothing could be observed. | Still unverified after Phase 5, and nothing built depends on it. `manual` mode via Desktop is proven, and the companion extension never asks whether a session can be messaged — only whether it is still running. Run `scripts/spike-vscode-inbox.mjs` to settle it. |
 | **A third session kind exists** | **VERIFIED (local spike)** | `ListAgents` returned 45 peers in three kinds: `bg`, `interactive`, and **`Remote Control`** (40 of them, all `offline`). The spec anticipates only the first two. | `delphi status` must filter to live, same-machine sessions. Forty offline Remote Control rows are not seats, and a department view that lists them is useless. → C-012 |
 | Message held for approval | **VERIFIED (local spike)** | Sending from a bypass-permissions session to a manual-mode background session put the receiver at `status: "waiting"`, `waitingFor: "permission prompt"`, `state: "blocked"` — the message was **held for its user's approval**, not delivered to its model. | Exactly the signal ORCHESTRATION_SPEC §6 needs for "seat stuck on a permission": it is readable from `claude agents --json`, so the orchestrator can name the seat and what it waits on. **A successful send is not action** — the orchestrator must never treat delivery as agreement. |
 | `notify_when_idle` | **VERIFIED — not what the spec assumed** | It is an **input on the `SendMessage` tool**, not a setting. One-shot, same machine, **main conversation only** (a subagent or teammate that sets it gets no subscription), expires after 12 h. | ORCHESTRATION_SPEC §6 must call it via SendMessage from the orchestrator's main thread. → C-005 |
@@ -164,7 +170,7 @@ The CLI's OAuth session had expired; the owner re-authenticated on 2026-09-17 an
 | 3 | `claude agents --json` field shape | **PASS, and it confirms C-007.** The union of fields observed across six live entries was exactly `cwd, id, kind, name, pid, sessionId, startedAt, state, status` (+ `waitingFor` when waiting). **No `model`, no `agent`.** |
 | 4 | Cross-session discovery and delivery, Desktop → CLI background session | **PASS with an important caveat.** `ListAgents` from the Desktop session saw the CLI-spawned session; `SendMessage` was accepted and queued; the receiver then sat at `waitingFor: "permission prompt"`, `state: "blocked"` because it ran in a different permission mode. Delivery ≠ action. |
 | 5 | Two-teammate `teams` spike | **NOT RUN.** Agent Teams needs an **interactive CLI** session — `-p` never spawns teammates and Desktop does not support teams at all, so it cannot be driven from a tool call. Deferred to Phase 3, which is where `teams` mode is actually built. |
-| 6 | VS Code extension session reachable via `ListAgents` | **NOT RUN.** No extension session was open. Deferred to Phase 5, where the VS Code surface is built. Not on the Phase 1–2 path. |
+| 6 | VS Code extension session reachable via `ListAgents` | **STILL NOT RUN**, and it needs a person: a Claude Code session has to be started inside VS Code, which no tool call can do. `scripts/spike-vscode-inbox.mjs` takes the reading before and after and prints what to do in between. Phase 5 shipped without the answer because nothing depends on it — the companion extension reads the ledger, not sessions, and joins panes to `claude agents --json` only to avoid attaching to a session that has ended. |
 
 | 7 | `wt -w 0 split-pane` for the `--surface wt` terminal split | **PASS.** Run by the owner 2026-09-17: the pane opened in the **current** Windows Terminal window, which is what `-w 0` is for. `dept up --surface wt` now runs it and prints what it ran. |
 
