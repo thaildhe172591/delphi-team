@@ -50,3 +50,9 @@ reality differs. Each was marked `[VERIFY]` or implied by one. Evidence is in `.
 |---|---|---|---|
 | C-012 | Sessions are `interactive` or background; `delphi status` merges them with the board. | `ListAgents` returns a **third kind, `Remote Control`** — on this machine 40 of 45 peers, all `offline`. | `delphi status` and `dept status` filter to live, same-machine sessions. Offline Remote Control rows are never shown as seats. |
 | C-013 | ORCHESTRATION_SPEC §6: "seat stuck on a permission → the orchestrator reports which seat, which command, how to approve." | Confirmed implementable, and sharper than the spec assumed: a held message surfaces as `status: "waiting"`, `waitingFor: "permission prompt"`, `state: "blocked"` in `claude agents --json`. A cross-session message between sessions in **different permission modes** is held for the receiving user's approval and never reaches that session's model. | The orchestrator reads `waitingFor` to name the blockage. PROTOCOL.md gains an explicit line: **a successful send is not action** — never treat delivery as agreement, and never re-send to hurry a blocked seat. |
+
+## F. Open question for the owner
+
+| # | Issue | Why it matters |
+|---|---|---|
+| C-014 | WORKFLOW §2 fixes the Node floor at `engines >=20`, but **Node 20 reached end of life on 2026-04-30**, five months ago. Holding the floor already costs us the current lines of two dependencies: execa (10 needs Node ≥22) and commander (15 needs ≥22.12). Both were pinned back to their Node 20-compatible lines to honour the spec. | Every future dependency choice pays this tax, for a runtime that no longer receives security fixes. Raising the floor to `>=22` is a change to a decision recorded in the spec, so it is the owner's to make (BUILD_PROMPT rule 10). |
