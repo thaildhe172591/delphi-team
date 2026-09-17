@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    // The source is ESM and esbuild bundles it to the CommonJS the extension host loads,
+    // so neither NodeNext mode describes this package. `preserve` is the one that does.
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node", "vscode"]
+  },
+  "include": ["src/**/*.ts", "tsup.config.ts"]
+}

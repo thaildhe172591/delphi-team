@@ -1,6 +1,6 @@
 # BUILD STATE
 
-Updated: 2026-09-17 · **Phase 4 (Advanced management) — DONE.** Waiting on the owner to approve Phase 5.
+Updated: 2026-09-17 · **Phase 5 (Automation) — DONE.** Waiting on the owner to approve Phase 6.
 
 ## Current phase
 Phases 0 to 3 complete. The repository is public, CI runs on every push, and delphi is set up on itself.
@@ -31,7 +31,9 @@ Node floor `>=22` since ADR-0009.
 ```
 packages/core       schemas · role composition · locked ledger · claude adapter ·
                     embedded templates · init planning · doctor checks
-packages/cli        18 commands, all with --json; the hook entry point
+packages/cli        20 commands, all with --json; the hook entry point; the MCP server
+packages/vscode     delphi-team-vscode: the board in the status bar, one editor terminal
+                    per running seat, driven entirely by the ledger
 packages/templates  43 files: 15 roles, 8 capabilities, 5 teams, 6 skills,
                     PROTOCOL.md, 9 ledger and 4 artifact templates, sample config
 python/             hatchling wheel carrying a compiled binary, no npx fallback
@@ -41,7 +43,11 @@ scripts/            sync-version · build-binaries · build-templates
 ```
 
 ## Measured, not assumed
-- **244 tests pass.** `packages/core` coverage was 92/85/94/93 at the end of 2a and has grown since.
+- **345 tests pass.** `packages/core` coverage was 92/85/94/93 at the end of 2a and has grown since.
+- The MCP server was checked three ways: unit tests, a real JSON-RPC exchange over stdio, and registration
+  through `claude mcp add`, which correctly held the project-scoped server as pending approval.
+- `delphi loop` cannot start more than `--max-stories x --max-attempts` sessions. A test pins the bound;
+  four stop conditions were exercised end to end against a stand-in binary.
 - Two processes writing one ledger lose nothing; a contested task move has exactly one winner.
 - `delphi init` is idempotent, keeps files the user owns, and preserves the project block inside each seat.
 - The board refuses `ready` without acceptance criteria, `done` without a report, `blocked` without a reason.
@@ -56,6 +62,12 @@ scripts/            sync-version · build-binaries · build-templates
 3. A hook payload `cwd` Node cannot resolve made SessionStart inject nothing, silently.
 4. Earlier: a retry-based file lock has no fairness, so concurrent writers starve (ADR-0008).
 5. Earlier: execa 10 and commander 15 both need Node 22, quietly breaking the declared floor.
+6. **Every background dispatch was broken on Windows, and had been since Phase 2.** `claude` on PATH is an
+   npm `.cmd` shim; `cmd.exe` treats a line break as a command separator, and every spawn prompt is
+   multi-line, so execa refused the call before the session existed. `dept up`, `dispatch` and `meeting`
+   were all affected. The adapter now resolves the shim to the `.exe` it names (C-017).
+7. The loop counted review rounds, so a seat that stopped without touching the board left the next decision
+   identical to the last one and the same story was dispatched forever. It counts every dispatch now.
 
 Each has a test now.
 
@@ -63,16 +75,18 @@ Each has a test now.
 1. `packages/cli` has no README, so the npm page would be blank. Needed before the first publish.
 2. `delphi cost` ships counting sessions rather than money, and says so in its own output. Whether to
    keep it at all is still the owner's call at release (C-009).
-3. Spike 6 — whether a VS Code extension session binds a cross-session inbox — is due in Phase 5, where
-   that surface is built. It is the last unanswered item in the verification matrix.
+3. Spike 6 — whether a VS Code extension session binds a cross-session inbox — still needs the owner to
+   run it, because it needs a Claude Code session started inside VS Code. `scripts/spike-vscode-inbox.mjs`
+   is written and ready. Nothing in the extension depends on the answer: it reads the ledger, not sessions.
+   It is the last unanswered item in the verification matrix.
 
 ## Blockers
 None.
 
 ## Next step
-**Phase 5 — automation**, pending approval: `delphi loop` (create -> dev -> review, stopping when a human
-is needed), the MCP server, and the VS Code companion extension. Spike 6 — whether a VS Code extension
-session binds a cross-session inbox — belongs there.
+**Phase 6 — surface and docs**, pending approval: `watch --web`, the docs site, the three packs
+(software-team, solo-dev, content-team), the contribution guide, and `docs/traceability.md` mapping
+R01-R25 to where each requirement is met.
 
 ## Quick verification commands
 ```bash

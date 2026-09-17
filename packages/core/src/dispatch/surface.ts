@@ -139,7 +139,10 @@ export function planSurface(
       return { surface, commands: [], notes }
 
     case 'vscode':
-      notes.push('the VS Code surface arrives with the companion extension')
+      // No command, and none is wanted. The companion extension watches `sessions.log`,
+      // so the seats delphi just started are already something it can see; driving VS Code
+      // from out here would mean a second channel that can disagree with the ledger.
+      notes.push('the companion extension picks these up from the ledger: run "delphi: Open the department"')
       return { surface, commands: [], notes }
 
     default:

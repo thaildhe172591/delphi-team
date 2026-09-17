@@ -1,0 +1,77 @@
+{
+  "name": "delphi-team-vscode",
+  "displayName": "delphi-team",
+  "version": "0.1.0",
+  "description": "See the delphi department from VS Code: the board in the status bar, one editor terminal per working seat. Unofficial; works with Claude Code.",
+  "license": "MIT",
+  "publisher": "delphi-team",
+  "private": true,
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "claude-code",
+    "agents",
+    "orchestration"
+  ],
+  "main": "./dist/extension.js",
+  "files": [
+    "dist"
+  ],
+  "activationEvents": [
+    "workspaceContains:.delphi/config.yaml"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "delphi.openDepartment",
+        "title": "delphi: Open the department",
+        "category": "delphi"
+      },
+      {
+        "command": "delphi.showBoard",
+        "title": "delphi: Watch the board",
+        "category": "delphi"
+      }
+    ],
+    "configuration": {
+      "title": "delphi-team",
+      "properties": {
+        "delphi.claudePath": {
+          "type": "string",
+          "default": "claude",
+          "description": "The claude executable. Change this only when it is not on PATH."
+        },
+        "delphi.delphiPath": {
+          "type": "string",
+          "default": "delphi",
+          "description": "The delphi executable, used by the board watcher."
+        },
+        "delphi.notifyOnDispatch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer to open the seats when delphi starts a department."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "@delphi-team/core": "workspace:*",
+    "@types/vscode": "^1.95.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thaildhe172591/delphi-team.git",
+    "directory": "packages/vscode"
+  },
+  "homepage": "https://github.com/thaildhe172591/delphi-team#readme",
+  "bugs": {
+    "url": "https://github.com/thaildhe172591/delphi-team/issues"
+  }
+}

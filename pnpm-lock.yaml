@@ -79,6 +79,15 @@ importers:
 
   packages/templates: {}
 
+  packages/vscode:
+    devDependencies:
+      '@delphi-team/core':
+        specifier: workspace:*
+        version: link:../core
+      '@types/vscode':
+        specifier: ^1.95.0
+        version: 1.138.0
+
 packages:
 
   '@babel/helper-string-parser@7.29.7':
@@ -684,6 +693,9 @@ packages:
 
   '@types/retry@0.12.5':
     resolution: {integrity: sha512-3xSjTp3v03X/lSQLkczaN9UIEwJMoMCA1+Nb5HfbJEQWogdeQIyVtTvxPXDQjZ5zws8rFQfVfRdz03ARihPJgw==}
+
+  '@types/vscode@1.138.0':
+    resolution: {integrity: sha512-DhlvrucJa8n6EHst7qQcXOcjLKs/VRTQy55plLO+RN74jonYsr/t9dd66zBnAyz1tpDig0okQAxuoPHpVNje2g==}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
@@ -1882,6 +1894,8 @@ snapshots:
       '@types/retry': 0.12.5
 
   '@types/retry@0.12.5': {}
+
+  '@types/vscode@1.138.0': {}
 
   '@typescript/typescript-aix-ppc64@7.0.2':
     optional: true
