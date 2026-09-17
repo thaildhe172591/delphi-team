@@ -18,7 +18,7 @@
     "build": "tsc -p ."
   },
   "dependencies": {
-    "execa": "^9.6.1",
+    "execa": "^10.0.1",
     "gray-matter": "^4.0.3",
     "proper-lockfile": "^4.1.2",
     "yaml": "^2.9.1",

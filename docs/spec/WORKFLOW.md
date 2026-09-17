@@ -15,7 +15,7 @@ Mọi mục **[VERIFY]** phải được xác minh với Claude Code bản đang
 ---
 
 ## 2. Stack (agent kiểm tra phiên bản ổn định mới nhất trước khi cài)
-- Node LTS (engines `>=20`), TypeScript strict, ESM; build `tsup`; test `vitest`; lint/format `biome` (hoặc eslint+prettier).
+- Node LTS (engines `>=22` — **amended 2026-09-17, see `.build/DECISIONS.md` ADR-0009**; originally `>=20`), TypeScript strict, ESM; build `tsup`; test `vitest`; lint/format `biome` (hoặc eslint+prettier).
 - CLI `commander` hoặc `cac`; tương tác `@clack/prompts`; frontmatter `gray-matter` + `yaml`; schema `zod` (xuất JSON Schema vào `schemas/`).
 - Tiến trình con `execa`; khóa file `proper-lockfile`.
 - Release `changesets`; npm provenance; PyPI trusted publishing; binary độc lập cho wheel (chọn công cụ ở Phase 0); Python shim bằng `hatchling` (hoặc tương đương), không chứa logic.

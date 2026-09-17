@@ -91,3 +91,16 @@ cross-process contention is bounded by the number of delphi processes — a hand
 lottery is fine. It is also faster in the common case. The cost is that a burst of writes in one
 process is now strictly serial; the stress test needs a longer timeout because of it, which is an
 honest reflection of what the code does rather than a workaround.
+
+## ADR-0009 — The Node floor moves to 22
+**Status:** accepted · 2026-09-17 · **approved by the owner** · amends WORKFLOW §2
+**Context:** the spec fixed `engines >=20`. Node 20 reached end of life on 2026-04-30, five months ago, and
+Node 22 is the active LTS. Holding the old floor already cost us the current lines of two dependencies:
+execa 10 and commander 15 both require Node 22 or newer, and both had to be pinned back. CI caught it only
+because a job builds on the declared floor.
+**Decision:** `engines: >=22` for the npm package and the workspace. execa and commander return to their
+current releases, and the floor job in CI now guards Node 22.
+**Consequences:** the tax stops recurring on every future dependency choice, and we no longer imply support
+for a runtime that receives no security fixes. Anyone still on Node 20 installs through the PyPI wheels,
+which carry a compiled binary and need no Node at all — so the practical loss is close to nothing.
+`requires-python` stays at 3.9: the Python side is a shim around a binary and has no such pressure.
