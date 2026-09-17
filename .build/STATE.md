@@ -1,11 +1,10 @@
 # BUILD STATE
 
-Updated: 2026-09-17 · **Phase 1 (Repo skeleton) — DONE.** Stopped at the mandatory point before creating the
-public GitHub repository or pushing.
+Updated: 2026-09-17 · **Phase 2a (Core) — DONE.** Phase 1 complete; the public repository exists and CI runs.
 
 ## Current phase
-Phase 1 complete. Next action is the owner's: approve Phase 2 (MVP), and decide whether to create the public
-repository now or later.
+Phase 2 is being built in three reported stages, at the owner's request.
+**2a (core) is done.** Next: 2b (all templates and roles), then 2c (CLI commands, skills, hooks, dogfood).
 
 ## Environment
 | Tool | Version | Note |

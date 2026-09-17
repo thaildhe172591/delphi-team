@@ -39,3 +39,8 @@
 2026-09-17 | P1 | Uninstalled the pipx build afterwards so a frozen 0.1.0 binary cannot shadow development builds.
 2026-09-17 | P1 | Read-only review found two real defects in the Python shim: a present-but-unrunnable binary raised an unhandled OSError traceback instead of the crafted message, and Ctrl+C on Windows surfaced as an uncaught KeyboardInterrupt. Both fixed; python/test_shim.py added (plain asserts, no framework) and wired into ci.yml.
 2026-09-17 | P1 | Owner approved creating the public GitHub repository now, and splitting Phase 2 into three reported stages.
+2026-09-17 | P1 | Public repo created at github.com/thaildhe172591/delphi-team and pushed. First CI run: 5 of 6 jobs green.
+2026-09-17 | P1 | CI failure was real and useful: the unicode-path job checks out below the workspace root, so pnpm/action-setup found no package.json to read `packageManager` from. Fixed by pointing package_json_file at the checkout.
+2026-09-17 | P2a | Core built: zod schemas (config, role, capability, team, story, board, project index), role build with marked blocks and the documented frontmatter precedence, ledger (paths, locking store, journal, board with transition rules), and the claude adapter.
+2026-09-17 | P2a | The concurrency test earned its place twice: it found that the retry budget starved writers, and then that a retry-based file lock has no fairness at all. Fixed properly with an in-process queue (ADR-0008) rather than by raising retries.
+2026-09-17 | P2a | 86 tests pass. packages/core coverage: statements 92%, branches 85%, functions 94%, lines 93% - all above the 80% threshold.

@@ -75,3 +75,19 @@ so it is not a stop point. Revisit if core ever needs bundling.
 **Consequences:** nothing to keep in version lockstep on the npm side, no scope to provision before a first
 release, and no way to install a half-set of packages. `core` must therefore never appear under the CLI's runtime
 `dependencies` — a test asserts this, because the mistake produces a tarball nobody can install.
+
+## ADR-0008 — Ledger writes queue in-process before taking the file lock
+**Status:** accepted · 2026-09-17
+**Context:** several seats, hooks and the orchestrator write the same ledger files, so every
+mutation takes a cross-process lock (`proper-lockfile`) and lands atomically via write-then-rename.
+A 25-way concurrent append failed twice: once outright, once under coverage instrumentation.
+**Diagnosis:** a retry-based file lock is a lottery, not a queue. Each waiter retries on its own
+schedule and nothing guarantees an unlucky one ever wins, so raising the retry budget moved the
+threshold without removing the failure.
+**Decision:** serialise callers per path **inside the process** with a promise chain, and let that
+chain be the single contender for the file lock.
+**Consequences:** N local callers take the file lock once at a time instead of racing, so
+cross-process contention is bounded by the number of delphi processes — a handful — where a retry
+lottery is fine. It is also faster in the common case. The cost is that a burst of writes in one
+process is now strictly serial; the stress test needs a longer timeout because of it, which is an
+honest reflection of what the code does rather than a workaround.
