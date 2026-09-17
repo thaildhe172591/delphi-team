@@ -18,3 +18,28 @@ and the spec bundle lived in `architectures-design/` while BUILD_PROMPT referenc
 byte-identical nested duplicate so there is exactly one source of truth.
 **Consequences:** BUILD_PROMPT's documented restart line ("read docs/spec/BUILD_PROMPT.md and .build/STATE.md")
 works verbatim in later sessions.
+
+## ADR-0003 — Standalone binary: Bun compile, not Node SEA
+**Status:** accepted · 2026-09-17 · supersedes the open choice left by PACKAGING_SPEC §1
+**Context:** the PyPI wheels must carry a CLI binary so Python users need no Node. Candidates were
+`bun build --compile`, Node SEA, and `pkg`.
+**Decision:** use `bun build --compile`.
+**Evidence:** Bun cross-compiles from one host to every target in PACKAGING_SPEC §3 plus musl. Node SEA is
+Stability 1.1 and its CI-tested platforms exclude macOS x64 and Alpine/musl outright, which would drop two rows of
+our support matrix. `pkg` was deprecated at 5.8.1 and archived on 2024-01-13, and its own README redirects to SEA.
+**Consequences:** ~60–85 MB per binary — the honest price of "no Node required", to be stated in the README and the
+release notes. macOS needs `codesign` with jit/unsigned-memory/library-validation entitlements. Bun cannot sign on
+Windows, so Authenticode is a separate CI step. A hatchling custom build hook sets `pure_python=False` plus an
+explicit wheel tag; a console_script shim `os.execv`s on POSIX and uses `subprocess` on Windows. All three were
+built and run end to end during Phase 0.
+
+## ADR-0004 — Drop the `dt` command alias
+**Status:** accepted · 2026-09-17
+**Context:** PACKAGING_SPEC §0 proposes three command names — `delphi-team`, `delphi`, `dt` — with an explicit
+instruction to verify that none collides with a common command and to drop any that does.
+**Decision:** ship `delphi-team` and `delphi`. Drop `dt`.
+**Evidence:** `dt` collides with DITrack's `dt(1)` client and with RobinTMiller's long-standing disk/tape test tool,
+is taken on both npm and PyPI, and is a very common personal shell alias. `delphi` is clean: no mainstream toolchain
+ships a `delphi` executable and Embarcadero's compiler is `dcc32.exe`/`dcc64.exe`.
+**Consequences:** two command names to document and test instead of three. This follows the spec's own instruction
+rather than overriding an architectural decision, so it is not a stop point.
