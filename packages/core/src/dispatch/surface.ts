@@ -10,8 +10,9 @@ import type { Surface } from '../schema/common.js'
  * What is settled and what is not:
  *   - Agent Teams draws its own panes, and needs tmux or iTerm2 to do it. That is not this.
  *   - This is for `sessions` mode: one pane per seat, each attached to a background session.
- *   - The Windows Terminal invocation follows its documented syntax but has not been run
- *     end to end here, so `dept up --surface wt` prints it first. See `.build/VERIFY.md`.
+ *   - `wt -w 0 split-pane` was confirmed on 2026-09-17: the pane opens in the current
+ *     window, which is what `-w 0` buys. The command is still printed when it runs,
+ *     because a command that rearranges your screen should not be a surprise.
  */
 
 export interface Pane {

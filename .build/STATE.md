@@ -1,10 +1,15 @@
 # BUILD STATE
 
-Updated: 2026-09-17 · **Phase 2 (MVP) — DONE**, all three stages. Waiting on the owner to approve Phase 3.
+Updated: 2026-09-17 · **Phase 3 (Full dispatch) — DONE.** Waiting on the owner to approve Phase 4.
 
 ## Current phase
-Phase 2 complete: 2a core, 2b templates, 2c CLI, skills, hooks and dogfood.
-The repository is public, CI runs on every push, and delphi is set up on itself.
+Phases 0 to 3 complete. The repository is public, CI runs on every push, and delphi is set up on itself.
+
+Phase 3 settled two things that were open since Phase 0, both by the owner running them:
+- **Agent Teams**: a team is created with only the lead as a member; named agents run as background
+  subagents, the three team hooks never fire, and the task tools do not exist. delphi uses `SubagentStop`,
+  which does fire and carries the seat's closing line. Nothing depends on the native task list. (C-015)
+- **`wt -w 0 split-pane`**: confirmed to open in the current window, so `--surface wt` runs it.
 
 ## Environment
 | Tool | Version |
@@ -58,15 +63,15 @@ Each has a test now.
 1. `packages/cli` has no README, so the npm page would be blank. Needed before the first publish.
 2. Spike 5 (`teams` with two teammates) is due in Phase 3; spike 6 (VS Code extension inbox) in Phase 5.
 3. `delphi cost` needs re-scoping with the owner in Phase 4 (C-009).
-4. `delphi inbox`, `handoff`, `next`, `status`, `watch`, `dept up/down` are Phase 3.
+4. `delphi cost` still needs re-scoping with the owner (C-009): there is no stable local source for
+   historical spend, so it can only report what delphi itself dispatched.
 
 ## Blockers
 None.
 
 ## Next step
-**Phase 3 — full dispatch**, pending approval: `dept up --mode teams` in-process and tmux, the
-`TaskCreated`/`TaskCompleted`/`TeammateIdle` hooks, `--surface wt|tmux|desktop`, `dept status/down`,
-`shift end`, and `task/handoff/inbox/report/next/status/watch`.
+**Phase 4 — advanced management**, pending approval: `worktree`, `memory show/compact`, `upgrade`,
+`export plugin`, `meeting`, `cost` (needs re-scoping, C-009), `doctor --score`, `import bmad`.
 
 ## Quick verification commands
 ```bash

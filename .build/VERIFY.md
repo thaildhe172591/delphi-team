@@ -166,7 +166,7 @@ The CLI's OAuth session had expired; the owner re-authenticated on 2026-09-17 an
 | 5 | Two-teammate `teams` spike | **NOT RUN.** Agent Teams needs an **interactive CLI** session — `-p` never spawns teammates and Desktop does not support teams at all, so it cannot be driven from a tool call. Deferred to Phase 3, which is where `teams` mode is actually built. |
 | 6 | VS Code extension session reachable via `ListAgents` | **NOT RUN.** No extension session was open. Deferred to Phase 5, where the VS Code surface is built. Not on the Phase 1–2 path. |
 
-| 7 | `wt -w 0 split-pane` for the `--surface wt` terminal split | **NOT RUN.** `wt --help` opens its own window, so the syntax could not be read from a tool call, and running it opens panes on the owner's screen. The invocation follows the documented form and `dept up --surface` **prints it before running it**, so it can be read first. Settle it alongside the Agent Teams spike. |
+| 7 | `wt -w 0 split-pane` for the `--surface wt` terminal split | **PASS.** Run by the owner 2026-09-17: the pane opened in the **current** Windows Terminal window, which is what `-w 0` is for. `dept up --surface wt` now runs it and prints what it ran. |
 
 ### Spike 5 result — Agent Teams, run by the owner 2026-09-17
 
