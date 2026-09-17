@@ -61,10 +61,10 @@ Each has a test now.
 
 ## Open items
 1. `packages/cli` has no README, so the npm page would be blank. Needed before the first publish.
-2. Spike 5 (`teams` with two teammates) is due in Phase 3; spike 6 (VS Code extension inbox) in Phase 5.
-3. `delphi cost` needs re-scoping with the owner in Phase 4 (C-009).
-4. `delphi cost` still needs re-scoping with the owner (C-009): there is no stable local source for
-   historical spend, so it can only report what delphi itself dispatched.
+2. `delphi cost` needs re-scoping with the owner (C-009): there is no stable local source for historical
+   spend, so it can only report what delphi itself dispatched.
+3. Spike 6 — whether a VS Code extension session binds a cross-session inbox — is due in Phase 5, where
+   that surface is built. It is the last unanswered item in the verification matrix.
 
 ## Blockers
 None.
