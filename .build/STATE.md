@@ -51,12 +51,11 @@ docs/spec/          the specification · docs/research/ the verification record
 ```
 
 ## Open items carried forward
-1. **Issue-template URLs contain an `OWNER` placeholder** — fill them in when the GitHub repository is created.
-2. **`packages/cli` has no README of its own**, so the npm page would be blank. Add one (or reuse the root
+1. **`packages/cli` has no README of its own**, so the npm page would be blank. Add one (or reuse the root
    README) before the first publish.
-3. **The public repository does not exist yet.** R04 wants one; creating it and the first push are stop points.
-4. Spike 5 (`teams` with two teammates) is due in Phase 3; spike 6 (VS Code extension inbox) in Phase 5.
-5. `delphi cost` needs re-scoping with the owner in Phase 4 (C-009).
+2. **Public repository created 2026-09-17** at github.com/thaildhe172591/delphi-team (owner approved).
+3. Spike 5 (`teams` with two teammates) is due in Phase 3; spike 6 (VS Code extension inbox) in Phase 5.
+4. `delphi cost` needs re-scoping with the owner in Phase 4 (C-009).
 
 ## Blockers
 None.

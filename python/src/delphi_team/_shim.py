@@ -22,10 +22,16 @@ def binary_path() -> Path:
     return _BIN_DIR / ("delphi.exe" if os.name == "nt" else "delphi")
 
 
+def _machine() -> str:
+    if hasattr(os, "uname"):
+        return os.uname().machine
+    return os.environ.get("PROCESSOR_ARCHITECTURE", "unknown")
+
+
 def _missing_binary_message(exe: Path) -> str:
     return (
         f"delphi-team has no compiled binary for this platform "
-        f"({sys.platform}, {os.uname().machine if hasattr(os, 'uname') else os.environ.get('PROCESSOR_ARCHITECTURE', 'unknown')}).\n"
+        f"({sys.platform}, {_machine()}).\n"
         f"Expected it at: {exe}\n\n"
         "Install the Node distribution instead:\n"
         "    npm install -g delphi-team\n\n"
@@ -33,15 +39,40 @@ def _missing_binary_message(exe: Path) -> str:
     )
 
 
+def _unrunnable_binary_message(exe: Path, error: OSError) -> str:
+    return (
+        f"delphi-team found its binary but could not run it: {error}\n"
+        f"    {exe}\n\n"
+        "The file is usually not executable, or the install is incomplete. Try reinstalling:\n"
+        "    pipx reinstall delphi-team\n\n"
+        "Or use the Node distribution instead:\n"
+        "    npm install -g delphi-team"
+    )
+
+
+def _fail(message: str) -> "NoReturn":  # noqa: F821 - quoted so Python 3.9 needs no import
+    sys.stderr.write(message + "\n")
+    raise SystemExit(1)
+
+
 def main() -> None:
     exe = binary_path()
     if not exe.is_file():
-        sys.stderr.write(_missing_binary_message(exe) + "\n")
-        raise SystemExit(1)
+        _fail(_missing_binary_message(exe))
 
     args = [str(exe), *sys.argv[1:]]
-    if os.name == "nt":
-        raise SystemExit(subprocess.run(args).returncode)
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os.execv(str(exe), args)
+    try:
+        if os.name == "nt":
+            # Windows has no execv that replaces the process, so run the binary as a child.
+            raise SystemExit(subprocess.run(args).returncode)
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.execv(str(exe), args)
+    except KeyboardInterrupt:
+        # On Windows the console delivers Ctrl+C to both processes; without this the child
+        # exits cleanly and the parent then dies with a traceback. 130 is the shell convention.
+        raise SystemExit(130) from None
+    except OSError as error:
+        # A present but unrunnable binary: no execute bit, wrong architecture, truncated file.
+        # Report it the way the missing case is reported rather than raising a traceback.
+        _fail(_unrunnable_binary_message(exe, error))

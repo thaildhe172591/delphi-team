@@ -37,3 +37,5 @@
 2026-09-17 | P1 | ADR-0005 verified: with the binary removed, the shim refuses with exit 1 and an npm install hint instead of shelling out to npx.
 2026-09-17 | P1 | sync-version --check proven to detect drift (exit 1), repair it, and return clean.
 2026-09-17 | P1 | Uninstalled the pipx build afterwards so a frozen 0.1.0 binary cannot shadow development builds.
+2026-09-17 | P1 | Read-only review found two real defects in the Python shim: a present-but-unrunnable binary raised an unhandled OSError traceback instead of the crafted message, and Ctrl+C on Windows surfaced as an uncaught KeyboardInterrupt. Both fixed; python/test_shim.py added (plain asserts, no framework) and wired into ci.yml.
+2026-09-17 | P1 | Owner approved creating the public GitHub repository now, and splitting Phase 2 into three reported stages.

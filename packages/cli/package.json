@@ -29,5 +29,14 @@
   },
   "devDependencies": {
     "@delphi-team/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thaildhe172591/delphi-team.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/thaildhe172591/delphi-team#readme",
+  "bugs": {
+    "url": "https://github.com/thaildhe172591/delphi-team/issues"
   }
 }

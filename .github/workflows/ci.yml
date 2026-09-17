@@ -41,6 +41,13 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: pnpm coverage
 
+      # The Python side is a shim, not a codebase: plain asserts, no test framework to install.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Python shim self-check
+        run: python python/test_shim.py
+
       # ADR-0003: bun compiles the standalone binary the PyPI wheels carry.
       # Proving it builds and runs on every OS is cheap and catches breakage early.
       - uses: oven-sh/setup-bun@v2
