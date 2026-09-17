@@ -5,8 +5,10 @@ backend, frontend, DB, QA, tester, reviewer — each with its own role, its own 
 
 > Unofficial. Works with Claude Code; not affiliated with or endorsed by Anthropic.
 
-> **Status: pre-alpha, under construction.** The repository skeleton and the capability research are in place;
-> the CLI currently does nothing but report its version. Follow `.build/STATE.md` for where the build is.
+> **Status: pre-alpha, not published.** Phases 0-5 of the build are done: 32 commands, the ledger, the
+> seats and teams, dispatch and surfaces, the automation loop, an MCP server and a VS Code companion.
+> Nothing is on npm or PyPI yet. [`docs/try-it.md`](docs/try-it.md) walks through running it from source,
+> and marks which commands spend quota. `.build/STATE.md` is where the build stands.
 
 ---
 

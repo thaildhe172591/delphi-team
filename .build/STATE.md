@@ -31,7 +31,7 @@ Node floor `>=22` since ADR-0009.
 ```
 packages/core       schemas · role composition · locked ledger · claude adapter ·
                     embedded templates · init planning · doctor checks
-packages/cli        20 commands, all with --json; the hook entry point; the MCP server
+packages/cli        32 commands, all with --json; the hook entry point; the MCP server
 packages/vscode     delphi-team-vscode: the board in the status bar, one editor terminal
                     per running seat, driven entirely by the ledger
 packages/templates  43 files: 15 roles, 8 capabilities, 5 teams, 6 skills,
@@ -90,5 +90,12 @@ R01-R25 to where each requirement is met.
 
 ## Quick verification commands
 ```bash
-pnpm check && node packages/cli/dist/index.js doctor
+pnpm check                      # lint, build, typecheck, 345 tests
+node scripts/loop-lab.mjs       # the loop end to end, for free
+node packages/cli/dist/index.js doctor
 ```
+
+## Picking this up on another machine
+`.build/HANDOFF.md` is the whole context: what is being built, who decides what, the rules that are not
+yours to change, where the build stands, and every trap already paid for. Read it before touching anything.
+`docs/try-it.md` is the hands-on guide, with the quota-spending commands marked.
