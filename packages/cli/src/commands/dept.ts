@@ -359,13 +359,18 @@ export function deptCommand(): Command {
       const board = await readYaml(paths.board, BoardSchema, { version: 1, tasks: [] })
       const { dispatched, agents } = await liveSeats(context, slug)
 
-      // `claude agents --json` also lists interactive sessions with no id, and Remote
-      // Control rows are not sessions on this machine at all. Only background rows are seats.
-      const live = (agents ?? []).filter((a) => a.kind === 'background')
+      // `claude agents --json` also lists interactive sessions with no id, Remote Control
+      // rows that are not sessions on this machine at all, and background sessions from
+      // other projects. Only a background session delphi itself started is a seat here —
+      // an unrelated one showed up named after itself and marked blocked, which reads as
+      // a department in trouble when nothing of the sort is true.
+      const live = (agents ?? []).filter(
+        (a) => a.kind === 'background' && a.name !== undefined && dispatched.has(a.name),
+      )
       const rows = live.map((entry) => {
-        const record = entry.name ? dispatched.get(entry.name) : undefined
+        const record = dispatched.get(entry.name as string)
         return {
-          seat: record?.seat ?? entry.name ?? '(unnamed)',
+          seat: record?.seat ?? (entry.name as string),
           name: entry.name ?? '-',
           id: entry.id ?? '-',
           state: entry.state ?? entry.status ?? '-',

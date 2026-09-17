@@ -51,12 +51,17 @@ async function snapshot(context: Context, slug: string): Promise<Snapshot> {
     // Being unable to ask is different from nothing running, and the view says which.
   }
 
+  // Only sessions delphi started. Claude Code reports every background session on the
+  // machine, and one from an unrelated project showed up here named after itself and
+  // marked blocked — which reads as "your department is stuck" when nothing of the sort
+  // is true. A session delphi did not start is not a seat.
   const seats = (agents ?? [])
-    .filter((entry) => entry.kind === 'background')
+    .filter((entry) => entry.kind === 'background' && entry.name !== undefined)
+    .filter((entry) => dispatched.has(entry.name as string))
     .map((entry) => {
-      const record = entry.name ? dispatched.get(entry.name) : undefined
+      const record = dispatched.get(entry.name as string)
       return {
-        seat: record?.seat ?? entry.name ?? '(unnamed)',
+        seat: record?.seat ?? (entry.name as string),
         state: entry.state ?? entry.status ?? '-',
         waitingFor: entry.waitingFor ?? null,
         task: record?.task ?? '-',

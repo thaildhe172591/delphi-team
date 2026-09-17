@@ -27,10 +27,16 @@ export function formatEntry(entry: JournalEntry): string {
   return parts.map((part) => part.replaceAll('|', '/')).join(SEPARATOR)
 }
 
+const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/
+
 export function parseEntry(line: string): JournalEntry | null {
   const parts = line.split(SEPARATOR).map((p) => p.trim())
   const [timestamp, id, seat, event, ...rest] = parts
   if (!timestamp || !id || !seat || !event) return null
+  // A line has to start with a timestamp to be an event. Four fields is not enough: the
+  // template's own `Format: <ISO time> | <id> | <seat> | <event> | <detail>` line has four,
+  // and it was read as an event and shown in `watch` with "SO ti" where the time goes.
+  if (!TIMESTAMP.test(timestamp)) return null
   const detail = rest.join(SEPARATOR)
   return detail ? { timestamp, id, seat, event, detail } : { timestamp, id, seat, event }
 }
@@ -49,11 +55,13 @@ export async function appendJournal(
  */
 export async function readJournalTail(path: string, count: number): Promise<JournalEntry[]> {
   const text = await readOr(path, '')
-  const lines = text.split('\n').filter((line) => line.trim() !== '')
-  return lines
-    .slice(-count)
+  // Filtered before slicing, so `count` means that many events rather than that many lines
+  // of which some were prose.
+  return text
+    .split('\n')
     .map(parseEntry)
     .filter((entry): entry is JournalEntry => entry !== null)
+    .slice(-count)
 }
 
 /** An ISO timestamp that keeps the local offset, so a journal reads in the author's own time. */

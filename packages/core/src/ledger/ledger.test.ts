@@ -81,7 +81,15 @@ describe('journal', () => {
   })
 
   it('does not let a field break the line format', () => {
-    const line = formatEntry({ timestamp: 't', id: 'T-1', seat: 'qa', event: 'note', detail: 'a | b' })
+    // A real timestamp: a line only counts as an event when it starts with one, so a
+    // placeholder here would be testing a line the reader now refuses outright.
+    const line = formatEntry({
+      timestamp: '2026-09-17T16:50:37+07:00',
+      id: 'T-1',
+      seat: 'qa',
+      event: 'note',
+      detail: 'a | b',
+    })
     expect(parseEntry(line)?.detail).toBe('a / b')
   })
 
