@@ -54,3 +54,24 @@ naming the platform and pointing at the npm install path. Nothing shells out to 
 **Consequences:** one less code path and no hidden Node dependency; users on an unsupported platform get an
 explicit instruction instead of a silent runtime download. This amends a decision recorded in the spec bundle, so
 it was put to the owner and approved before being written down.
+
+## ADR-0006 — `packages/core` builds with `tsc`, not `tsup`
+**Status:** accepted · 2026-09-17
+**Context:** WORKFLOW §2 names `tsup` as the build tool. On the current stack, `tsup --dts` crashes:
+it rolls declarations up through `rollup-plugin-dts`, which is built against the TypeScript 5.7 compiler API and
+fails on TypeScript 7's native compiler with `Cannot read properties of undefined (reading 'useCaseSensitiveFileNames')`.
+**Decision:** `packages/core` builds with plain `tsc`, which already emits ESM plus declarations. `packages/cli`
+keeps `tsup`, which it genuinely needs: a single bundled file for `bun build --compile`, and `define` to inline the
+version at build time (a compiled binary has no package.json to read).
+**Consequences:** one fewer config file and one fewer moving part in core; no pin to an older TypeScript. This
+narrows a tool choice from the lowest-precedence spec document rather than changing an architectural decision,
+so it is not a stop point. Revisit if core ever needs bundling.
+
+## ADR-0007 — The published `delphi-team` package is the only npm artifact
+**Status:** accepted · 2026-09-17
+**Context:** PACKAGING_SPEC §0 leaves room for a `@delphi-team/*` scope "when packages are split".
+**Decision:** publish exactly one npm package, `delphi-team` (from `packages/cli`). `@delphi-team/core` and
+`@delphi-team/templates` stay private workspace packages, bundled into it.
+**Consequences:** nothing to keep in version lockstep on the npm side, no scope to provision before a first
+release, and no way to install a half-set of packages. `core` must therefore never appear under the CLI's runtime
+`dependencies` — a test asserts this, because the mistake produces a tarball nobody can install.

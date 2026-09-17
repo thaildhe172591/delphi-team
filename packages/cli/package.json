@@ -1,0 +1,33 @@
+{
+  "name": "delphi-team",
+  "version": "0.1.0",
+  "description": "Run Claude Code as a department: an orchestrator plus specialist seats, each with its own role, memory and scope. Unofficial; works with Claude Code.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "delphi-team": "./dist/index.js",
+    "delphi": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "claude-code",
+    "agents",
+    "orchestration",
+    "cli"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "dependencies": {
+    "commander": "^15.0.0"
+  },
+  "devDependencies": {
+    "@delphi-team/core": "workspace:*"
+  }
+}

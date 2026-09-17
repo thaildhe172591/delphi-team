@@ -1,0 +1,10 @@
+{
+  "name": "@delphi-team/templates",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The single source of every file delphi writes into a user's project. Phase 2 fills it.",
+  "files": [
+    "files"
+  ]
+}

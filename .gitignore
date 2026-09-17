@@ -1,11 +1,18 @@
 node_modules/
 dist/
+dist-artifacts/
+dist-binaries/
 coverage/
 *.tsbuildinfo
-.delphi/logs/
-.delphi/tmp/
+
+# Compiled binaries are staged into the wheel at build time, never committed.
+python/src/delphi_team/bin/*
+!python/src/delphi_team/bin/.gitkeep
 python/dist/
 python/build/
 *.egg-info/
 __pycache__/
+
+.delphi/logs/
+.delphi/tmp/
 .build/tmp/

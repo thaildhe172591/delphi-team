@@ -1,0 +1,43 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not report security issues here — see SECURITY.md.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what happened, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. delphi ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Paste the output of `delphi doctor` if it runs, otherwise fill this in by hand.
+      value: |
+        - OS and version:
+        - Shell (PowerShell / bash / zsh):
+        - Installed via (npm / pnpm / npx / pipx / uvx / pip):
+        - delphi --version:
+        - claude --version:
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Command output or a hook log from `.delphi/logs/`. Please remove anything sensitive.
+      render: shell

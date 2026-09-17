@@ -25,3 +25,15 @@
 2026-09-17 | P0 | Spikes 5 (teams, 2 teammates) and 6 (VS Code extension inbox) deferred to Phase 3 and Phase 5 - neither is needed before the phase that builds the feature it tests.
 2026-09-17 | P0 | All spike background sessions stopped and removed; zero leftovers verified.
 2026-09-17 | P0 | PHASE 0 DONE. Waiting for the owner to approve Phase 1.
+2026-09-17 | P1 | Installed bun 1.4.2 and pipx 1.17.3 (owner approved).
+2026-09-17 | P1 | Monorepo scaffolded: packages/{core,cli,templates}, python/, scripts/, .github/. TS strict ESM, vitest 5, biome 2.5.14, changesets 3, commander 15, typescript 7.0.2.
+2026-09-17 | P1 | TypeScript 7 breaks tsup --dts via rollup-plugin-dts. core switched to plain tsc (ADR-0006); cli keeps tsup for bundling + version inlining.
+2026-09-17 | P1 | Fixed: @delphi-team/core was briefly a runtime dependency of the published package - it is inlined by tsup and private, so shipping it would make the tarball uninstallable. Guard test added (ADR-0007).
+2026-09-17 | P1 | pnpm check green: biome clean, tsc clean, build ok, 12 tests pass, core coverage 100% (threshold 80%).
+2026-09-17 | P1 | npm pack -> npm i -g -> `delphi --version` = 0.1.0 and `delphi-team --version` = 0.1.0.
+2026-09-17 | P1 | bun build --compile -> 83 MB Windows x64 binary, runs standalone, prints 0.1.0. Matches the 60-85 MB estimate from Phase 0.
+2026-09-17 | P1 | Wheel built: delphi_team-0.1.0-py3-none-win_amd64.whl, Root-Is-Purelib: false, binary inside. pipx install -> `delphi --version` = 0.1.0.
+2026-09-17 | P1 | PACKAGING_SPEC section 8 acceptance: npm and PyPI --version and --help output are byte-identical. Exit code propagates through the Windows shim.
+2026-09-17 | P1 | ADR-0005 verified: with the binary removed, the shim refuses with exit 1 and an npm install hint instead of shelling out to npx.
+2026-09-17 | P1 | sync-version --check proven to detect drift (exit 1), repair it, and return clean.
+2026-09-17 | P1 | Uninstalled the pipx build afterwards so a frozen 0.1.0 binary cannot shadow development builds.

@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest a capability or a change
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that is awkward or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+      description: A command, a flag, a role, a capability — whatever shape it takes.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Before you file
+      options:
+        - label: This does not require bypassing Claude Code's permission system.
+          required: true
+        - label: I have checked docs/spec/ in case it is already planned for a later phase.

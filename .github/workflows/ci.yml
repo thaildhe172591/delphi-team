@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows first: it is the primary target (REQUIREMENTS R14).
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint, typecheck, build, test
+        run: pnpm check
+
+      - name: Coverage
+        if: matrix.os == 'ubuntu-latest'
+        run: pnpm coverage
+
+      # ADR-0003: bun compiles the standalone binary the PyPI wheels carry.
+      # Proving it builds and runs on every OS is cheap and catches breakage early.
+      - uses: oven-sh/setup-bun@v2
+      - name: Compile and smoke-test the standalone binary
+        shell: bash
+        run: |
+          node scripts/build-binaries.mjs
+          binary=$(find dist-binaries -type f -name 'delphi*' | head -1)
+          echo "built: $binary ($(du -h "$binary" | cut -f1))"
+          built=$("$binary" --version)
+          packaged=$(node -p "require('./packages/cli/package.json').version")
+          test "$built" = "$packaged" || { echo "binary reports $built, package says $packaged"; exit 1; }
+
+  node-lts-floor:
+    name: node 20 (engines floor)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build && pnpm test
+
+  version-lockstep:
+    name: version lockstep
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      # One version across npm, PyPI, the plugin and the release
+      # (docs/spec/PACKAGING_SPEC.md section 1).
+      - run: node scripts/sync-version.mjs --check
+
+  unicode-paths:
+    name: paths with spaces and non-ASCII
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: 'Dự án delphi/check out'
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Build and test from a path with a space and Vietnamese characters
+        shell: bash
+        working-directory: 'Dự án delphi/check out'
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm build
+          pnpm test
+          node packages/cli/dist/index.js --version

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling>=1.32"]
+build-backend = "hatchling.build"
+
+[project]
+name = "delphi-team"
+version = "0.1.0"
+description = "Run Claude Code as a department. Unofficial; works with Claude Code."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+keywords = ["claude-code", "agents", "orchestration", "cli"]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+delphi-team = "delphi_team._shim:main"
+delphi = "delphi_team._shim:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/delphi_team"]
+# Without this, hatchling's VCS-aware file selection silently drops the gitignored binary.
+artifacts = ["src/delphi_team/bin/*"]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "hatch_build.py"

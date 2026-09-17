@@ -1,66 +1,75 @@
 # BUILD STATE
 
-Updated: 2026-09-17 · **Phase 0 (Verification) — DONE.** Waiting on the owner to approve Phase 1.
+Updated: 2026-09-17 · **Phase 1 (Repo skeleton) — DONE.** Stopped at the mandatory point before creating the
+public GitHub repository or pushing.
 
 ## Current phase
-Phase 0 — Verification, complete. No product code written, as the spec requires.
-Next action is the owner's: approve Phase 1 (a mandatory stop point).
+Phase 1 complete. Next action is the owner's: approve Phase 2 (MVP), and decide whether to create the public
+repository now or later.
 
-## Environment (verified 2026-09-17)
+## Environment
 | Tool | Version | Note |
 |---|---|---|
-| Claude Code | 2.1.274 | `/c/nvm4w/nodejs/claude` · re-authenticated 2026-09-17 |
-| Node | v22.16.0 | meets `engines >=20`, and npm trusted publishing's Node ≥ 22.14 |
-| npm / pnpm | 10.9.2 / 10.33.2 | npm trusted publishing needs ≥ 11.5.1 — CI must pin a newer npm |
+| Claude Code | 2.1.274 | re-authenticated 2026-09-17 |
+| Node / npm / pnpm | 22.16.0 / 10.9.2 / 10.33.2 | npm trusted publishing needs npm ≥ 11.5.1 — CI pins a newer one |
 | git | 2.54.0.windows.1 | |
-| Python / uv | 3.14.6 / 0.11.23 | **`pipx` not installed** — the install matrix needs it |
-| Windows Terminal (`wt`) | present | |
-| tmux | absent | expected on Windows native |
-| Pythia | `pythia-plsql` 0.14.2 | already the latest release; it is a CLI, not an MCP server |
-| OS | Windows 11 Pro 22621 | the primary target per R14 |
+| Python / uv / pipx | 3.14.6 / 0.11.23 / 1.17.3 | pipx installed 2026-09-17 |
+| bun | 1.4.2 | installed 2026-09-17, builds the standalone binaries |
+| Windows Terminal (`wt`) | present | `tmux` absent, expected on Windows native |
+| Pythia | `pythia-plsql` 0.14.2 | latest; a CLI, not an MCP server |
+| OS | Windows 11 Pro 22621 | primary target per R14 |
 
-## Repo layout decided
-- Root: `D:\dev-project\personal\delphi-team` (renamed from `pythia-agents-team`).
-- Spec bundle at `docs/spec/` (10 files); the byte-identical nested duplicate was deleted.
-- `git init` done, **no remote** — creating the public repo is a mandatory stop point (R04).
+## Stack as built
+TypeScript 7.0.2 strict + ESM · vitest 5.0.1 · biome 2.5.14 · changesets 3.0.3 · commander 15.0.0 ·
+tsup 8.5.1 (CLI only) · hatchling 1.32 · bun 1.4.2.
 
-## Done in Phase 0
-- Toolchain and CLI surface probed locally.
-- Four documentation-research passes over the official docs, covering every `[VERIFY]` item in the spec bundle.
-- Six live spikes (`.build/VERIFY.md` §8): four ran and passed, two are deferred to the phase that builds the
-  feature they test (`teams` needs an interactive CLI session → Phase 3; the VS Code surface → Phase 5).
-- Pythia surveyed on this machine — facts, not guesses.
-- Deliverables: `.build/VERIFY.md`, `.build/CONFLICTS.md` (C-001..C-013),
-  `docs/research/claude-code-capabilities.md`, `docs/research/pythia-capability-notes.md`, ADR-0001..ADR-0005.
+## Phase 1 acceptance — measured, not assumed
+| Criterion | Result |
+|---|---|
+| `pnpm install && pnpm build && pnpm test` | green — 12 tests, 2 files |
+| Lint and typecheck | clean (`pnpm check` runs all four) |
+| `packages/core` coverage ≥ 80% | **100%** (16/16 statements, 15/15 branches, 3/3 functions) |
+| `delphi --version` from `npm pack` + `npm i -g` | `0.1.0`, both `delphi` and `delphi-team` |
+| Standalone binary via `bun build --compile` | 83 MB Windows x64, runs with no Node, prints `0.1.0` — inside the 60–85 MB estimate from Phase 0 |
+| Wheel with the binary | `delphi_team-0.1.0-py3-none-win_amd64.whl`, `Root-Is-Purelib: false` |
+| `delphi --version` from `pipx install <wheel>` | `0.1.0` |
+| **npm vs PyPI output identical** (PACKAGING_SPEC §8) | `--version` and `--help` byte-identical |
+| Exit code through the Windows shim | a bad flag returns 1 |
+| ADR-0005 (no npx fallback) | with the binary removed, the shim refuses with exit 1 and an npm install hint |
+| `sync-version --check` | detects drift (exit 1), repairs it, returns clean |
 
-## Design consequences carried into Phase 1+
-1. Role **bodies** carry every mandatory procedure — teammates do not get `skills`, and `memory`/`effort`/`hooks`
-   are not documented as reaching them.
-2. delphi records each seat's model, effort and agent in `sessions.log` at dispatch; `claude agents --json`
-   cannot report them back.
-3. `delphi status` filters `ListAgents` to live, same-machine sessions, and reads `waitingFor` to name a seat
-   blocked on a permission prompt.
-4. Hooks are quality gates and audit trails, never the security boundary — only exit 2 blocks, and a timed-out
-   `PreToolUse` does not gate at all.
-5. Seat progress comes from the ledger, never from parsing `claude logs`.
-6. Commands are `delphi-team` and `delphi`. `dt` is dropped (ADR-0004).
-7. The Python wheel fails loudly on an unsupported platform; no `npx` fallback (ADR-0005).
-8. `bun build --compile` produces the binaries (ADR-0003).
+## What is in the repository now
+```
+packages/core       version + minimum-Claude-Code gate, built with tsc
+packages/cli        the delphi / delphi-team commands, bundled with tsup
+packages/templates  placeholder — Phase 2 fills it
+python/             hatchling wheel + argv/stdio/exit-code shim, no npx fallback
+scripts/            sync-version.mjs, build-binaries.mjs
+.github/            ci.yml, install-matrix.yml, issue and PR templates
+docs/spec/          the specification · docs/research/ the verification record
+.build/             STATE, JOURNAL, DECISIONS (ADR-0001..0007), CONFLICTS (C-001..C-013), VERIFY
+```
+
+## Open items carried forward
+1. **Issue-template URLs contain an `OWNER` placeholder** — fill them in when the GitHub repository is created.
+2. **`packages/cli` has no README of its own**, so the npm page would be blank. Add one (or reuse the root
+   README) before the first publish.
+3. **The public repository does not exist yet.** R04 wants one; creating it and the first push are stop points.
+4. Spike 5 (`teams` with two teammates) is due in Phase 3; spike 6 (VS Code extension inbox) in Phase 5.
+5. `delphi cost` needs re-scoping with the owner in Phase 4 (C-009).
 
 ## Blockers
-None. (One cosmetic leftover: the empty folder `D:\dev-project\personal\pythia-agents-team`, which could not be
-removed while this session held a handle on it. Delete it any time.)
+None.
 
 ## Next step
-**Phase 1 — repo skeleton**, pending the owner's approval: monorepo per PACKAGING_SPEC §2, TypeScript strict,
-vitest, biome, changesets, LICENSE MIT, README skeleton, CONTRIBUTING/SECURITY/CODE_OF_CONDUCT, issue and PR
-templates, `ci.yml` across Windows/macOS/Linux, the `python/` shim skeleton, a trial Windows x64 binary, and the
-first `install-matrix.yml`.
-**Acceptance:** `pnpm i && pnpm build && pnpm test` green; `delphi --version` runs both from `npm pack` and from a
-wheel installed with pipx on Windows.
-**Stop before** creating the public GitHub repo or pushing.
+**Phase 2 — MVP**, pending approval. Core schema, roles build, ledger with file locking, the `claude` adapter;
+all templates (10 roles, team templates, capability packs including the Pythia pack, PROTOCOL.md, ledger and
+artifact templates, sample config); commands `init`, `doctor`, `role`, `capability`, `project`, `resume`,
+`state/journal/checkpoint`, `story`, `task`, `snap`, `start`, `dispatch`, `hook`; skills `/dept` (manual and
+sessions modes), `/resume`, `/seat`, `/role`, `/shift-end`, `/checkpoint`; hooks SessionStart (five sources —
+remember `fork`), PreCompact, PreToolUse; then dogfood by running `delphi init` on this repository.
 
 ## Quick verification commands
 ```bash
-claude --version && claude agents --json --all
+pnpm check && node packages/cli/dist/index.js --version
 ```
