@@ -1,0 +1,14 @@
+name: feature
+description: A new feature across the stack, where the requirements still need pinning down.
+seats:
+  - seat: orchestrator
+  - seat: ba
+  - seat: techlead
+  - seat: dev-be
+  - seat: dev-fe
+  - seat: qa
+    when: phase in [build, verify]
+limits:
+  max_active: 4
+dispatch:
+  mode: auto

@@ -24,6 +24,16 @@ Useful targets:
 | `pnpm sync-version` | Propagate the CLI version to the Python distribution |
 | `node scripts/build-binaries.mjs` | Compile a standalone binary for the host platform |
 
+## delphi runs on itself
+
+This repository is set up with delphi (`.delphi/` and `.claude/`), because a tool for
+coordinating work should be used to coordinate its own. The committed `.claude/settings.json`
+installs hooks that call `delphi hook ...`.
+
+If you do not have delphi on your PATH those hooks fail, harmlessly: they are fail-open by
+design, so Claude Code carries on and the error is logged to the gitignored `.delphi/logs/`.
+To make them do something, build the CLI and put it on your PATH, or ignore them.
+
 ## Ground rules
 
 **Windows first.** It is the primary target. Anything that assumes a POSIX shell, forward slashes, or a path

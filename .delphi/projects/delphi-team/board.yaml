@@ -1,0 +1,42 @@
+version: 1
+tasks:
+  - id: T-100
+    title: "Phase 3 — full dispatch: teams mode, surfaces, status, handoffs"
+    status: backlog
+    owner: techlead
+    type: feature
+    priority: normal
+    depends_on: []
+    updated: 2026-09-17T15:09:05+07:00
+  - id: T-101
+    title: Phase 4 — worktrees, memory compaction, upgrade, plugin export, cost
+    status: backlog
+    owner: dev-be
+    type: feature
+    priority: normal
+    depends_on: []
+    updated: 2026-09-17T15:09:05+07:00
+  - id: T-102
+    title: Phase 5 — loop, MCP server, VS Code companion
+    status: backlog
+    owner: dev-be
+    type: feature
+    priority: normal
+    depends_on: []
+    updated: 2026-09-17T15:09:06+07:00
+  - id: T-103
+    title: Phase 6 — docs site, packs, traceability table R01-R25
+    status: backlog
+    owner: techlead
+    type: feature
+    priority: normal
+    depends_on: []
+    updated: 2026-09-17T15:09:07+07:00
+  - id: T-104
+    title: Phase 7 — release through npm and PyPI
+    status: backlog
+    owner: techlead
+    type: feature
+    priority: normal
+    depends_on: []
+    updated: 2026-09-17T15:09:08+07:00

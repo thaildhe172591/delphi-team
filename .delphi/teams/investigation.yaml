@@ -1,0 +1,11 @@
+name: investigation
+description: A defect with several competing explanations. Reproduce first, then narrow.
+seats:
+  - seat: orchestrator
+  - seat: techlead
+  - seat: dev-be
+  - seat: tester
+limits:
+  max_active: 3
+dispatch:
+  mode: auto

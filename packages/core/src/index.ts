@@ -7,6 +7,26 @@ export {
   type DispatchOptions,
   parseDispatchId,
 } from './adapters/claude.js'
+export { type Check, type DoctorFacts, type Level, runChecks, worstLevel } from './doctor/checks.js'
+export { DELPHI_BLOCK, mergeClaudeMd, removeClaudeMd } from './init/claudemd.js'
+export {
+  type FileAction,
+  type InitInput,
+  type InitPlan,
+  type PlannedWrite,
+  pendingWrites,
+  planInit,
+} from './init/plan.js'
+export {
+  DELPHI_HOOKS,
+  type DelphiHookEvent,
+  hasDelphiHooks,
+  isDelphiHandler,
+  type MergeResult,
+  mergeDelphiHooks,
+  removeDelphiHooks,
+  type Settings,
+} from './init/settings.js'
 export {
   addTask,
   BoardError,
@@ -36,7 +56,6 @@ export {
   writeAtomic,
   writeYaml,
 } from './ledger/store.js'
-
 export {
   type BuildRoleInput,
   type BuildRoleResult,
@@ -94,12 +113,14 @@ export {
   hasTemplate,
   listCapabilities,
   listRoles,
+  listSkills,
   listTeams,
   listTemplates,
   readCapability,
   readProtocol,
   readRole,
   readSampleConfig,
+  readSkill,
   readTeam,
   readTemplate,
   TemplateError,

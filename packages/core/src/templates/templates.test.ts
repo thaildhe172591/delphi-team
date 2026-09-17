@@ -8,12 +8,14 @@ import { ConfigSchema } from '../schema/config.js'
 import {
   listCapabilities,
   listRoles,
+  listSkills,
   listTeams,
   listTemplates,
   readCapability,
   readProtocol,
   readRole,
   readSampleConfig,
+  readSkill,
   readTeam,
   readTemplate,
 } from './index.js'
@@ -292,5 +294,45 @@ describe('building a real seat from real templates', () => {
       expect(matter(content).data.name, seat).toBe(seat)
       expect(warnings, `${seat} warned with no capabilities attached`).toEqual([])
     }
+  })
+})
+
+describe('shipped skills', () => {
+  const SKILLS = ['dept', 'resume', 'seat', 'role', 'shift-end', 'checkpoint']
+
+  it('ships the documented set', () => {
+    for (const name of SKILLS) {
+      expect(listSkills(), name).toContain(name)
+    }
+  })
+
+  it.each(SKILLS)('%s has a name matching its directory and a real description', (name) => {
+    const { frontmatter, body } = readSkill(name)
+    expect(frontmatter.name).toBe(name)
+    expect(String(frontmatter.description).length).toBeGreaterThan(40)
+    expect(body.length).toBeGreaterThan(200)
+  })
+
+  it('stops the model from invoking the two skills with side effects', () => {
+    // ORCHESTRATION_SPEC section 12: shift-end and checkpoint write files, so they are
+    // run deliberately by a person, not picked up because a sentence sounded relevant.
+    for (const name of ['shift-end', 'checkpoint']) {
+      expect(readSkill(name).frontmatter['disable-model-invocation'], name).toBe(true)
+    }
+  })
+
+  it('leaves the skills a seat needs to reach for auto-invocable', () => {
+    for (const name of ['dept', 'resume', 'seat', 'role']) {
+      expect(readSkill(name).frontmatter['disable-model-invocation'], name).toBeUndefined()
+    }
+  })
+
+  it('puts the seat identity where a compaction will keep it', () => {
+    // Only the first 5,000 tokens of a skill are re-attached after auto-compaction, so
+    // the rules that matter have to come before the prose that explains them.
+    const { body } = readSkill('seat')
+    const rules = body.indexOf('outrank your own judgement')
+    expect(rules).toBeGreaterThan(-1)
+    expect(body.slice(0, rules).length).toBeLessThan(2000)
   })
 })

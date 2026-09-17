@@ -87,6 +87,19 @@ export function readTeam(name: string): Team {
   return result.data as Team
 }
 
+export function listSkills(): string[] {
+  return listTemplates('skills/').map((path) => path.split('/')[1] ?? '')
+}
+
+/** A skill, with its frontmatter validated enough to catch a broken one at build time. */
+export function readSkill(name: string): { frontmatter: Record<string, unknown>; body: string } {
+  const { data, content } = matter(readTemplate(`skills/${name}/SKILL.md`))
+  if (typeof data.name !== 'string' || typeof data.description !== 'string') {
+    throw new TemplateError(`skill template skills/${name}/SKILL.md needs a name and a description`)
+  }
+  return { frontmatter: data, body: content.trim() }
+}
+
 /** The protocol every seat loads, imported into CLAUDE.md. */
 export function readProtocol(): string {
   return readTemplate('PROTOCOL.md')

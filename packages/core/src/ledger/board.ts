@@ -84,18 +84,21 @@ export async function moveTask(
     const check = checkTransition(entry, to, options)
     if (!check.ok) throw new BoardError(check.reason)
 
-    moved = {
+    const next: BoardEntry = {
       ...entry,
       status: to,
       updated: options.now ?? isoNow(),
       ...(to === 'blocked' ? { blocked_reason: options.reason } : {}),
     }
-    if (to !== 'blocked') delete moved.blocked_reason
+    // A reason belongs to the block, not to the task for ever after.
+    if (to !== 'blocked') delete next.blocked_reason
 
-    return { ...board, tasks: board.tasks.map((task) => (task.id === id ? moved! : task)) }
+    moved = next
+    return { ...board, tasks: board.tasks.map((task) => (task.id === id ? next : task)) }
   })
-  // updateYaml throws on failure, so reaching here means the move happened.
-  return moved as BoardEntry
+
+  if (!moved) throw new BoardError(`${id} was not moved; the board was not updated`)
+  return moved
 }
 
 export async function addTask(path: string, entry: BoardEntry): Promise<BoardEntry> {
