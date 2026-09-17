@@ -15,6 +15,7 @@ import {
 } from './commands/ledger.js'
 import { capabilityCommand, roleCommand, teamCommand } from './commands/roles.js'
 import { dispatchCommand, seatCommand, snapCommand, startCommand } from './commands/session.js'
+import { watchCommand } from './commands/watch.js'
 import { UserError } from './context.js'
 import { EXIT } from './output.js'
 
@@ -58,6 +59,7 @@ export function createProgram(version: string = __DELPHI_VERSION__): Command {
   program.addCommand(startCommand())
   program.addCommand(dispatchCommand())
   program.addCommand(snapCommand())
+  program.addCommand(watchCommand())
 
   program.addCommand(hookCommand(), { hidden: true })
 

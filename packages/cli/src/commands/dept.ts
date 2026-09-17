@@ -12,10 +12,13 @@ import {
   isoNow,
   openTasks,
   planDepartment,
+  planSurface,
   readOr,
   readTeam,
   readYaml,
+  renderCommand,
   StorySchema,
+  type Surface,
   spawnPrompt,
 } from '@delphi-team/core'
 import { Command } from 'commander'
@@ -108,6 +111,7 @@ export function deptCommand(): Command {
     .option('--team <name>', 'team template to use')
     .option('--mode <mode>', 'auto | teams | sessions | manual')
     .option('--phase <phase>', 'which phase the project is in, for seat guards')
+    .option('--surface <surface>', 'wt | tmux | desktop | none — split a terminal to watch the seats')
     .option('--project <slug>')
     .option('--dry-run', 'show the plan and start nothing')
     .option('--json', 'machine-readable output')
@@ -186,10 +190,40 @@ export function deptCommand(): Command {
         }))
 
         const manual = decision.mode === 'manual'
+
+        // The session ids do not exist yet, so the surface command is shown with a
+        // placeholder. Showing it is the point: this is the command that would open
+        // windows on your screen, and you should be able to read it before it does.
+        const requestedSurface = (options.surface as Surface | undefined) ?? context.config.dispatch.surface
+        const surfacePlan =
+          requestedSurface === 'none' || plan.active.length === 0
+            ? null
+            : planSurface(
+                requestedSurface,
+                plan.active.map((seatPlan) => ({
+                  title: seatPlan.seat,
+                  command: 'claude',
+                  args: ['attach', '<session-id>'],
+                  cwd: context.root,
+                })),
+                { session: slug },
+              )
+
         report.emit(
-          { ok: true, mode: decision.mode, dryRun: Boolean(options.dryRun), plan, instructions },
+          {
+            ok: true,
+            mode: decision.mode,
+            dryRun: Boolean(options.dryRun),
+            plan,
+            instructions,
+            surface: surfacePlan,
+          },
           () => {
             printPlan(report, plan, decision)
+            if (surfacePlan?.commands.length) {
+              report.line('\nAfter the seats start, this would split the terminal:')
+              for (const command of surfacePlan.commands) report.line(`  ${renderCommand(command)}`)
+            }
 
             if (instructions.length === 0) {
               report.line('\nNothing to start.')
@@ -255,13 +289,37 @@ export function deptCommand(): Command {
         detail: started.map((s) => `${s.seat}:${s.id}`).join(' '),
       })
 
-      report.emit({ ok: true, mode: decision.mode, started, plan }, () => {
+      const surface = (options.surface as Surface | undefined) ?? context.config.dispatch.surface
+      const surfacePlan =
+        surface === 'none' || started.length === 0
+          ? null
+          : planSurface(
+              surface,
+              started.map((s) => ({
+                title: s.seat,
+                command: 'claude',
+                args: ['attach', s.id],
+                cwd: context.root,
+              })),
+              { session: slug },
+            )
+
+      report.emit({ ok: true, mode: decision.mode, started, plan, surface: surfacePlan }, () => {
         printPlan(report, plan, decision)
         report.line(`\nStarted ${plural(started.length, 'seat')}:`)
         for (const line of columns(
           started.map((s) => [`  ${s.seat}`, s.id, s.task, `claude attach ${s.id}`]),
         )) {
           report.line(line)
+        }
+        if (surfacePlan) {
+          for (const note of surfacePlan.notes) report.line(`\n${note}`)
+          if (surfacePlan.commands.length > 0) {
+            // Printed rather than run: this opens windows on someone's screen, and the
+            // Windows Terminal invocation has not been proven end to end here yet.
+            report.line('\nTo split the terminal, run:')
+            for (const command of surfacePlan.commands) report.line(`  ${renderCommand(command)}`)
+          }
         }
       })
     })

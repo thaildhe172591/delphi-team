@@ -22,6 +22,16 @@ export {
   type DispatchFacts,
   seatsNeedingOwnEffort,
 } from './dispatch/mode.js'
+export {
+  type Pane,
+  planSurface,
+  renderCommand,
+  type SurfaceCommand,
+  SurfaceError,
+  type SurfacePlan,
+  tmuxCommands,
+  windowsTerminalCommand,
+} from './dispatch/surface.js'
 export { type Check, type DoctorFacts, type Level, runChecks, worstLevel } from './doctor/checks.js'
 export { DELPHI_BLOCK, mergeClaudeMd, removeClaudeMd } from './init/claudemd.js'
 export {

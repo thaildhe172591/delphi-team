@@ -77,6 +77,7 @@ describe('the command tree', () => {
       'handoff',
       'inbox',
       'next',
+      'watch',
     ]) {
       expect(names, `${name} is missing`).toContain(name)
     }

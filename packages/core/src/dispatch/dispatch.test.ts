@@ -4,6 +4,7 @@ import { TeamSchema } from '../schema/role.js'
 import { BoardSchema } from '../schema/work.js'
 import { type DepartmentInput, guardAdmits, planDepartment, spawnPrompt } from './department.js'
 import { chooseDispatchMode, type DispatchFacts, seatsNeedingOwnEffort } from './mode.js'
+import { planSurface, renderCommand, SurfaceError, tmuxCommands, windowsTerminalCommand } from './surface.js'
 
 const cliInteractive: DispatchFacts = {
   interactive: true,
@@ -285,5 +286,61 @@ describe('the spawn prompt', () => {
       acceptance: ['ok'],
     })
     expect(loose).toContain('ask the orchestrator before writing')
+  })
+})
+
+const pane = (title: string) => ({
+  title,
+  command: 'claude',
+  args: ['attach', `id-${title}`],
+  cwd: 'D:Dự án delphi',
+})
+
+describe('terminal surfaces', () => {
+  it('builds one Windows Terminal invocation with the panes chained', () => {
+    const [command, ...rest] = windowsTerminalCommand([pane('dev-be'), pane('qa')])
+    expect(rest).toHaveLength(0)
+    expect(command?.command).toBe('wt')
+    // -w 0 targets the current window; without it every pane opens a new one.
+    expect(command?.args.slice(0, 2)).toEqual(['-w', '0'])
+    expect(command?.args.filter((a) => a === ';')).toHaveLength(1)
+    expect(command?.args.filter((a) => a === 'split-pane')).toHaveLength(2)
+  })
+
+  it('passes a path with a space and non-ASCII as one argument', () => {
+    // Nothing goes through a shell, so quoting is never the caller's problem.
+    const [command] = windowsTerminalCommand([pane('dev-be')])
+    expect(command?.args).toContain('D:Dự án delphi')
+  })
+
+  it('creates, fills, tiles and attaches a tmux session', () => {
+    const commands = tmuxCommands('ocr', [pane('dev-be'), pane('qa'), pane('tester')])
+    const verbs = commands.map((c) => c.args[0])
+    expect(verbs).toEqual(['new-session', 'split-window', 'split-window', 'select-layout', 'attach-session'])
+    expect(commands.every((c) => c.command === 'tmux')).toBe(true)
+  })
+
+  it('does nothing with no panes', () => {
+    expect(windowsTerminalCommand([])).toEqual([])
+    expect(tmuxCommands('ocr', [])).toEqual([])
+  })
+
+  it('says Claude Desktop cannot be driven, rather than pretending', () => {
+    // Simulating clicks is explicitly out of scope.
+    const plan = planSurface('desktop', [pane('dev-be')])
+    expect(plan.commands).toEqual([])
+    expect(plan.notes.join(' ')).toContain('open the sessions yourself')
+  })
+
+  it('refuses Windows Terminal away from Windows', () => {
+    if (process.platform === 'win32') return
+    expect(() => planSurface('wt', [pane('dev-be')])).toThrow(SurfaceError)
+  })
+
+  it('renders a runnable line for the dry run', () => {
+    const [command] = windowsTerminalCommand([pane('dev-be')])
+    const line = renderCommand(command as never)
+    expect(line.startsWith('wt -w 0 split-pane')).toBe(true)
+    expect(line).toContain('"D:Dự án delphi"')
   })
 })
