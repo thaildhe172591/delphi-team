@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.delphi/logs/
+.delphi/tmp/
+python/dist/
+python/build/
+*.egg-info/
+__pycache__/
+.build/tmp/
