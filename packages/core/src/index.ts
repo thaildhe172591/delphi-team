@@ -33,6 +33,7 @@ export {
   windowsTerminalCommand,
 } from './dispatch/surface.js'
 export { type Check, type DoctorFacts, type Level, runChecks, worstLevel } from './doctor/checks.js'
+export { type BmadFinding, type BmadImport, type BmadSource, importBmad } from './import/bmad.js'
 export { DELPHI_BLOCK, mergeClaudeMd, removeClaudeMd } from './init/claudemd.js'
 export {
   type FileAction,
@@ -81,6 +82,15 @@ export {
   writeAtomic,
   writeYaml,
 } from './ledger/store.js'
+export {
+  archiveHeader,
+  CLAUDE_MEMORY_LIMITS,
+  type CompactResult,
+  compactMemory,
+  fitsInPreload,
+  type MemoryLimits,
+} from './memory/compact.js'
+export { buildPlugin, type PluginExport, type PluginFile, type PluginOptions } from './plugin/export.js'
 export {
   type BuildRoleInput,
   type BuildRoleResult,

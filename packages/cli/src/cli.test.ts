@@ -78,6 +78,13 @@ describe('the command tree', () => {
       'inbox',
       'next',
       'watch',
+      'upgrade',
+      'memory',
+      'worktree',
+      'export',
+      'meeting',
+      'cost',
+      'import',
     ]) {
       expect(names, `${name} is missing`).toContain(name)
     }

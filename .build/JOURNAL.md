@@ -68,3 +68,9 @@
 2026-09-17 | P3b | Design changed accordingly: delphi installs a SubagentStop hook, which is the event that actually arrives, and records each seat closing line in the journal. The three team hooks stay installed for environments where they fire, but nothing depends on them. board.yaml was already the source of truth, so the department still works. Recorded as C-015 and C-016.
 2026-09-17 | P3b | Owner confirmed `wt -w 0 split-pane` opens in the current window, so the surface is VERIFIED and `dept up --surface` now runs it as well as printing it. A failure there is reported and never fatal: the seats are already working and a terminal that did not split is cosmetic.
 2026-09-17 | P3 | PHASE 3 DONE. 283 tests pass.
+2026-09-17 | P4 | All eight commands built: upgrade, memory show/compact, worktree create/remove, export plugin, meeting, cost, doctor --score, import bmad.
+2026-09-17 | P4 | `memory compact` archives rather than deletes. MEMORY.md is preloaded as the first 200 lines or 25 KB, so a file that grows past that silently loses its own beginning; compaction moves the overflow beside it and tells the seat to promote anything that still matters.
+2026-09-17 | P4 | `cost` counts sessions delphi started, not money, and says so in its own output. Phase 0 proved there is no stable local source for account spend.
+2026-09-17 | P4 | `import bmad` reads the user's own PRD, epics, stories and sprint status. It copies no prompts or templates from that project.
+2026-09-17 | P4 | Three defects found by running it: `export plugin --out <absolute path>` joined the path onto the project root and produced nonsense; the BMAD section regex was missing its `m` flag so every imported brief came out empty; and the import produced two board rows for one story when it appeared in both a document and the sprint status.
+2026-09-17 | P4 | 305 tests pass.

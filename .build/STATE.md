@@ -1,6 +1,6 @@
 # BUILD STATE
 
-Updated: 2026-09-17 · **Phase 3 (Full dispatch) — DONE.** Waiting on the owner to approve Phase 4.
+Updated: 2026-09-17 · **Phase 4 (Advanced management) — DONE.** Waiting on the owner to approve Phase 5.
 
 ## Current phase
 Phases 0 to 3 complete. The repository is public, CI runs on every push, and delphi is set up on itself.
@@ -61,8 +61,8 @@ Each has a test now.
 
 ## Open items
 1. `packages/cli` has no README, so the npm page would be blank. Needed before the first publish.
-2. `delphi cost` needs re-scoping with the owner (C-009): there is no stable local source for historical
-   spend, so it can only report what delphi itself dispatched.
+2. `delphi cost` ships counting sessions rather than money, and says so in its own output. Whether to
+   keep it at all is still the owner's call at release (C-009).
 3. Spike 6 — whether a VS Code extension session binds a cross-session inbox — is due in Phase 5, where
    that surface is built. It is the last unanswered item in the verification matrix.
 
@@ -70,8 +70,9 @@ Each has a test now.
 None.
 
 ## Next step
-**Phase 4 — advanced management**, pending approval: `worktree`, `memory show/compact`, `upgrade`,
-`export plugin`, `meeting`, `cost` (needs re-scoping, C-009), `doctor --score`, `import bmad`.
+**Phase 5 — automation**, pending approval: `delphi loop` (create -> dev -> review, stopping when a human
+is needed), the MCP server, and the VS Code companion extension. Spike 6 — whether a VS Code extension
+session binds a cross-session inbox — belongs there.
 
 ## Quick verification commands
 ```bash

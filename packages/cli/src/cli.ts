@@ -1,4 +1,13 @@
 import { Command } from 'commander'
+import {
+  costCommand,
+  exportCommand,
+  importCommand,
+  meetingCommand,
+  memoryCommand,
+  upgradeCommand,
+  worktreeCommand,
+} from './commands/advanced.js'
 import { deptCommand, handoffCommand, inboxCommand, nextCommand, shiftCommand } from './commands/dept.js'
 import { doctorCommand } from './commands/doctor.js'
 import { hookCommand } from './commands/hook.js'
@@ -60,6 +69,14 @@ export function createProgram(version: string = __DELPHI_VERSION__): Command {
   program.addCommand(dispatchCommand())
   program.addCommand(snapCommand())
   program.addCommand(watchCommand())
+
+  program.addCommand(upgradeCommand())
+  program.addCommand(memoryCommand())
+  program.addCommand(worktreeCommand())
+  program.addCommand(exportCommand())
+  program.addCommand(meetingCommand())
+  program.addCommand(costCommand())
+  program.addCommand(importCommand())
 
   program.addCommand(hookCommand(), { hidden: true })
 

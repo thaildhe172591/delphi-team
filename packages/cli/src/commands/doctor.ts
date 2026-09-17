@@ -28,6 +28,7 @@ import { createReporter, EXIT } from '../output.js'
 export function doctorCommand(): Command {
   return new Command('doctor')
     .description('check that the setup is sound')
+    .option('--score', 'also give the setup a score out of 100')
     .option('--json', 'machine-readable output')
     .action(async (options) => {
       const report = createReporter(Boolean(options.json))
@@ -35,8 +36,12 @@ export function doctorCommand(): Command {
       const facts = await gather(context)
       const checks = runChecks(facts)
       const level = worstLevel(checks)
+      const score = options.score ? scoreOf(checks) : null
 
-      report.emit({ level, checks }, () => print(report, checks, level))
+      report.emit({ level, checks, ...(score ? { score } : {}) }, () => {
+        print(report, checks, level)
+        if (score) printScore(report, score)
+      })
       if (level === 'fail') process.exitCode = EXIT.invalidState
     })
 }
@@ -176,4 +181,43 @@ function print(report: ReturnType<typeof createReporter>, checks: Check[], level
   report.line()
   if (level === 'ok') report.line('Everything checks out.')
   else report.line(`${failures} to fix, ${warnings} worth knowing about.`)
+}
+
+interface Score {
+  value: number
+  failures: number
+  warnings: number
+  passes: number
+}
+
+/**
+ * A number for the setup, so a change is visible at a glance.
+ *
+ * Deliberately blunt: a failure costs 15, a warning costs 4. It is a prompt to look, not a
+ * measurement of anything — a setup at 96 is not meaningfully better than one at 100, but
+ * one at 55 has something worth fixing.
+ */
+function scoreOf(checks: Check[]): Score {
+  const failures = checks.filter((c) => c.level === 'fail').length
+  const warnings = checks.filter((c) => c.level === 'warn').length
+  return {
+    value: Math.max(0, 100 - failures * 15 - warnings * 4),
+    failures,
+    warnings,
+    passes: checks.filter((c) => c.level === 'ok').length,
+  }
+}
+
+function printScore(report: ReturnType<typeof createReporter>, score: Score): void {
+  const verdict =
+    score.value === 100
+      ? 'nothing to fix'
+      : score.value >= 85
+        ? 'in good shape'
+        : score.value >= 60
+          ? 'worth a look'
+          : 'needs attention'
+  report.line(`Score: ${score.value}/100 — ${verdict}`)
+  report.line(`  ${score.passes} passing · ${score.warnings} warnings · ${score.failures} failures`)
+  report.line('  The score is a prompt to look, not a measurement. Read the list above.')
 }
