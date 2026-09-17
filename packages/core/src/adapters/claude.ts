@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { delimiter, dirname, join, sep } from 'node:path'
 import { execa } from 'execa'
 import { parseClaudeVersion } from '../version.js'
 
@@ -78,8 +80,66 @@ export function parseDispatchId(output: string): string | null {
   return match?.[1] ?? null
 }
 
+const SHIM = /\.(?:cmd|bat)$/i
+
+/**
+ * Find the real executable behind a Windows `.cmd` shim.
+ *
+ * On Windows `claude` on PATH is an npm shim, and a `.cmd` can only run through `cmd.exe`,
+ * which treats a line break as a command separator with no way to escape it. execa refuses
+ * to pass one rather than allow the injection -- correctly, but every prompt delphi sends
+ * is multi-line, so every background dispatch failed on Windows with a message about
+ * command injection (C-017).
+ *
+ * The shim names the `.exe` it calls. Running that directly needs no shell, so the
+ * prompt goes through untouched. Returns undefined when there is nothing to resolve,
+ * which is the normal case everywhere except a shimmed install.
+ */
+export function resolveWindowsShim(
+  binary: string,
+  env: NodeJS.ProcessEnv = process.env,
+  platform: string = process.platform,
+): string | undefined {
+  if (platform !== 'win32') return undefined
+
+  const file = SHIM.test(binary) ? binary : findOnPath(binary, env)
+  // Anything else -- a real `.exe`, a path we cannot find -- is execa's to handle, and it
+  // spawns an `.exe` directly without a shell.
+  if (!file || !SHIM.test(file) || !existsSync(file)) return undefined
+
+  let text: string
+  try {
+    text = readFileSync(file, 'utf8')
+  } catch {
+    return undefined
+  }
+
+  const quoted = /"([^"\r\n]*\.exe)"/i.exec(text)?.[1]
+  if (!quoted) return undefined
+
+  // `"%dp0%\node_modules\...\claude.exe"`, where dp0 is the shim's own directory.
+  const relative = quoted.replace(/^%~?dp0%?/i, '')
+  const parts = relative.split(/[\\/]+/).filter(Boolean)
+  const exe = relative === quoted ? quoted : join(dirname(file), ...parts)
+  return existsSync(exe) ? exe : undefined
+}
+
+/** The first match for `binary` on PATH, in the order Windows itself would try. */
+function findOnPath(binary: string, env: NodeJS.ProcessEnv): string | undefined {
+  if (binary.includes('/') || binary.includes(sep)) return undefined
+  const extensions = (env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)
+
+  for (const dir of (env.PATH ?? '').split(delimiter).filter(Boolean)) {
+    for (const extension of extensions) {
+      const candidate = join(dir, `${binary}${extension}`)
+      if (existsSync(candidate)) return candidate
+    }
+  }
+  return undefined
+}
+
 export interface ClaudeAdapterOptions {
-  /** Defaults to `claude` on PATH. */
+  /** Defaults to `$DELPHI_CLAUDE_BIN`, then `claude` on PATH. */
   binary?: string
   cwd?: string
   timeout?: number
@@ -89,16 +149,23 @@ export class ClaudeAdapter {
   private readonly binary: string
   private readonly cwd: string | undefined
   private readonly timeout: number
+  private resolved: string | undefined
 
   constructor(options: ClaudeAdapterOptions = {}) {
-    this.binary = options.binary ?? 'claude'
+    this.binary = options.binary ?? process.env.DELPHI_CLAUDE_BIN ?? 'claude'
     this.cwd = options.cwd
     this.timeout = options.timeout ?? 60_000
   }
 
+  /** The shim resolved to its real executable, worked out once. */
+  private file(): string {
+    if (this.resolved === undefined) this.resolved = resolveWindowsShim(this.binary) ?? this.binary
+    return this.resolved
+  }
+
   private async run(args: string[], input?: string): Promise<string> {
     try {
-      const result = await execa(this.binary, args, {
+      const result = await execa(this.file(), args, {
         ...(this.cwd ? { cwd: this.cwd } : {}),
         timeout: this.timeout,
         // Claude Code warns and waits when stdin is an unread pipe; be explicit.

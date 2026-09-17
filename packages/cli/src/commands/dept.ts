@@ -34,12 +34,12 @@ import { columns, createReporter, plural } from '../output.js'
  * core. This gathers the facts, carries out what was decided, and prints it.
  */
 
-function sessionName(slug: string, seat: string, prefixLength: number): string {
+export function sessionName(slug: string, seat: string, prefixLength: number): string {
   return `${slug.slice(0, prefixLength)}-${seat}`
 }
 
 /** Read the story fields the pre-spawn checks need. */
-async function readStories(context: Context, slug: string, ids: string[]) {
+export async function readStories(context: Context, slug: string, ids: string[]) {
   const paths = context.paths.project(slug)
   const stories: Record<string, ReturnType<typeof storyFields>> = {}
   for (const id of ids) {
@@ -459,7 +459,7 @@ export function deptCommand(): Command {
   return dept
 }
 
-function promptFor(
+export function promptFor(
   slug: string,
   team: string,
   seat: string,

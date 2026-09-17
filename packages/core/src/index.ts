@@ -6,6 +6,7 @@ export {
   type ClaudeAgentEntry,
   type DispatchOptions,
   parseDispatchId,
+  resolveWindowsShim,
 } from './adapters/claude.js'
 export {
   type DepartmentInput,
@@ -82,6 +83,32 @@ export {
   writeAtomic,
   writeYaml,
 } from './ledger/store.js'
+export {
+  advance,
+  DEFAULT_LOOP_LIMITS,
+  initialState,
+  type LoopLimits,
+  type LoopOutcome,
+  type LoopState,
+  type LoopStep,
+  nextStep,
+} from './loop/plan.js'
+export {
+  encode,
+  handleRequest,
+  type JsonRpcRequest,
+  type JsonRpcResponse,
+  PROTOCOL_VERSION,
+  RPC,
+  readMessages,
+  type ServerInfo,
+  type ServerOptions,
+  type ToolDefinition,
+  type ToolHandler,
+  type ToolResult,
+  textResult,
+} from './mcp/protocol.js'
+export { MCP_TOOL_NAMES, MCP_TOOLS } from './mcp/tools.js'
 export {
   archiveHeader,
   CLAUDE_MEMORY_LIMITS,

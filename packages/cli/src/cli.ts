@@ -22,6 +22,8 @@ import {
   storyCommand,
   taskCommand,
 } from './commands/ledger.js'
+import { loopCommand } from './commands/loop.js'
+import { mcpCommand } from './commands/mcp.js'
 import { capabilityCommand, roleCommand, teamCommand } from './commands/roles.js'
 import { dispatchCommand, seatCommand, snapCommand, startCommand } from './commands/session.js'
 import { watchCommand } from './commands/watch.js'
@@ -77,6 +79,8 @@ export function createProgram(version: string = __DELPHI_VERSION__): Command {
   program.addCommand(meetingCommand())
   program.addCommand(costCommand())
   program.addCommand(importCommand())
+  program.addCommand(mcpCommand())
+  program.addCommand(loopCommand())
 
   program.addCommand(hookCommand(), { hidden: true })
 

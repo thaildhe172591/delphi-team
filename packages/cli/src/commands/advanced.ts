@@ -11,7 +11,6 @@ import {
   pendingWrites,
   planInit,
   readOr,
-  readTeam,
   writeAtomic,
 } from '@delphi-team/core'
 import { Command } from 'commander'
@@ -265,8 +264,9 @@ export function exportCommand(): Command {
     .action(async (options) => {
       const report = createReporter(Boolean(options.json))
       const context = await requireInitialised()
-      const version = await packageVersion(context)
-      const plugin = buildPlugin({ version })
+      // The plugin carries delphi's version, not the host project's: it is delphi's
+      // templates that are being packaged.
+      const plugin = buildPlugin({ version: __DELPHI_VERSION__ })
 
       // `resolve` rather than `join`: an absolute --out is a perfectly reasonable thing to
       // pass, and joining it onto the project root produces a nonsense path.
@@ -286,15 +286,6 @@ export function exportCommand(): Command {
     })
 
   return exportCmd
-}
-
-async function packageVersion(context: Context): Promise<string> {
-  const text = await readOr(join(context.root, 'package.json'), '{}')
-  try {
-    return (JSON.parse(text) as { version?: string }).version ?? '0.0.0'
-  } catch {
-    return '0.0.0'
-  }
 }
 
 /**
