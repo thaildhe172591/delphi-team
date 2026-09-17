@@ -307,17 +307,33 @@ describe('terminal surfaces', () => {
     expect(command?.args.filter((a) => a === 'split-pane')).toHaveLength(2)
   })
 
+  it('keeps your pane on the left and stacks the seats down the right', () => {
+    // Without an explicit axis Windows Terminal halves whichever side is longer, so the
+    // arrangement changes with the window and is a scattered grid by four panes.
+    const [command] = windowsTerminalCommand([pane('dev-be'), pane('qa'), pane('tester')])
+    const args = command?.args ?? []
+    const axes = args.filter((a) => a === '-V' || a === '-H')
+    expect(axes).toEqual(['-V', '-H', '-H'])
+
+    // The share the new pane takes of the one being split, counting down so the three
+    // seats end up the same height: half the window, then 2/3 of that column, then half.
+    const sizes = args.filter((_, i) => args[i - 1] === '--size')
+    expect(sizes).toEqual(['0.5', '0.67', '0.50'])
+  })
+
   it('passes a path with a space and non-ASCII as one argument', () => {
     // Nothing goes through a shell, so quoting is never the caller's problem.
     const [command] = windowsTerminalCommand([pane('dev-be')])
     expect(command?.args).toContain('D:Dự án delphi')
   })
 
-  it('creates, fills, tiles and attaches a tmux session', () => {
+  it('creates, fills, arranges and attaches a tmux session', () => {
     const commands = tmuxCommands('ocr', [pane('dev-be'), pane('qa'), pane('tester')])
     const verbs = commands.map((c) => c.args[0])
     expect(verbs).toEqual(['new-session', 'split-window', 'split-window', 'select-layout', 'attach-session'])
     expect(commands.every((c) => c.command === 'tmux')).toBe(true)
+    // main-vertical, not tiled: one large pane and the seats in a column beside it.
+    expect(commands.find((c) => c.args[0] === 'select-layout')?.args).toContain('main-vertical')
   })
 
   it('does nothing with no panes', () => {

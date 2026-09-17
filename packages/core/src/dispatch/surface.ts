@@ -47,6 +47,16 @@ export class SurfaceError extends Error {
  *
  * `-w 0` targets the current window rather than opening another one, which is what makes
  * this feel like splitting rather than launching.
+ *
+ * The shape is tmux's `main-vertical`: you keep the left half, and the seats stack down
+ * the right. Splitting without saying which way leaves it to Windows Terminal, which
+ * halves whichever axis is longer and produces a different arrangement every time --
+ * fine for two panes, a scattered grid by four, and never the same twice.
+ *
+ * So the first split is vertical and takes half the window; each one after that is
+ * horizontal and splits the pane just created, because `split-pane` focuses the pane it
+ * makes. `--size` is the share the *new* pane takes of the one being split, so the sizes
+ * count down -- 3/4, 2/3, 1/2 -- to leave every seat the same height.
  */
 export function windowsTerminalCommand(panes: Pane[]): SurfaceCommand[] {
   if (panes.length === 0) return []
@@ -54,7 +64,20 @@ export function windowsTerminalCommand(panes: Pane[]): SurfaceCommand[] {
   const args: string[] = ['-w', '0']
   panes.forEach((pane, index) => {
     if (index > 0) args.push(';')
-    args.push('split-pane', '--title', pane.title, '-d', pane.cwd, pane.command, ...pane.args)
+    const remaining = panes.length - index
+    args.push(
+      'split-pane',
+      // First one away from the pane you are in; the rest down the column it started.
+      index === 0 ? '-V' : '-H',
+      '--size',
+      index === 0 ? '0.5' : (remaining / (remaining + 1)).toFixed(2),
+      '--title',
+      pane.title,
+      '-d',
+      pane.cwd,
+      pane.command,
+      ...pane.args,
+    )
   })
 
   return [
@@ -94,8 +117,10 @@ export function tmuxCommands(session: string, panes: Pane[]): SurfaceCommand[] {
 
   commands.push({
     command: 'tmux',
-    args: ['select-layout', '-t', session, 'tiled'],
-    describe: 'tile the panes',
+    // `main-vertical`, not `tiled`: you keep one large pane and the seats stack beside it.
+    // A tiled grid gives every seat the same weight as the one you are working in.
+    args: ['select-layout', '-t', session, 'main-vertical'],
+    describe: 'put the seats in a column beside the main pane',
   })
   commands.push({
     command: 'tmux',
