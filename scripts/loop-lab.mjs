@@ -68,7 +68,10 @@ function reset() {
 
 function loop(script, extra = []) {
   reset()
-  const output = run(['loop', '--project', 'demo', '--yes', '--poll', '1', ...extra], {
+  // `--surface none`: the lab dispatches eight times across the cases, and every dispatch
+  // now opens a pane. A test run must not carpet the screen in terminals.
+  const args = ['loop', '--project', 'demo', '--yes', '--poll', '1', '--surface', 'none', ...extra]
+  const output = run(args, {
     DELPHI_CLAUDE_BIN: fake,
     FAKE_STATE: 'fake-state.json',
     FAKE_LOG: 'fake-log.jsonl',
@@ -136,7 +139,7 @@ for (const one of cases) {
 
 // The guard that matters most: without --yes it must spend nothing at all.
 reset()
-const preview = run(['loop', '--project', 'demo'], { DELPHI_CLAUDE_BIN: fake })
+const preview = run(['loop', '--project', 'demo', '--surface', 'none'], { DELPHI_CLAUDE_BIN: fake })
 const spentNothing = !preview.includes('starting @') && preview.includes('at most 3 sessions')
 console.log(`${spentNothing ? 'ok  ' : 'FAIL'}  without --yes it prints the ceiling and starts nothing`)
 if (!spentNothing) failed++

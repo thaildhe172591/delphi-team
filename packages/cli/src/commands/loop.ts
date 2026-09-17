@@ -16,10 +16,12 @@ import {
   planDepartment,
   readTeam,
   readYaml,
+  type Surface,
 } from '@delphi-team/core'
 import { Command } from 'commander'
 import { requireInitialised, resolveProject, UserError } from '../context.js'
 import { createReporter, plural } from '../output.js'
+import { openPanes, reportSurface } from '../surface.js'
 import { promptFor, readStories, sessionName } from './dept.js'
 
 /**
@@ -49,6 +51,7 @@ export function loopCommand(): Command {
     .option('--step-timeout <minutes>', 'give up on a seat that has not finished by then', '20')
     .option('--poll <seconds>', 'how often to ask whether the seat has finished', '15')
     .option('--team <name>', 'team template to use')
+    .option('--surface <surface>', 'auto | wt | tmux | vscode | desktop | none')
     .option('--yes', 'actually start seats; without it this prints what it would spend and stops')
     .option('--json', 'machine-readable output')
     .action(async (options) => {
@@ -194,6 +197,19 @@ export function loopCommand(): Command {
         // still started that session, and saying otherwise hides what it spent.
         const record: { step: LoopStep; session?: string; outcome?: string } = { step, session }
         history.push(record)
+
+        // A pane per dispatch, so an unattended run is still something you can look at --
+        // and so a seat that stops to ask for a permission is visible rather than a line
+        // in a log twenty minutes later.
+        reportSurface(
+          report,
+          await openPanes(
+            context,
+            (options.surface as Surface | undefined) ?? context.config.dispatch.surface,
+            [{ title: `${seat} · ${id}`, id: session }],
+            { session: slug },
+          ),
+        )
 
         const ended = await waitFor(adapter, session, stepTimeout, pollEvery)
         if (ended !== 'finished') {

@@ -125,7 +125,7 @@ export function resolveWindowsShim(
 }
 
 /** The first match for `binary` on PATH, in the order Windows itself would try. */
-function findOnPath(binary: string, env: NodeJS.ProcessEnv): string | undefined {
+export function findOnPath(binary: string, env: NodeJS.ProcessEnv): string | undefined {
   if (binary.includes('/') || binary.includes(sep)) return undefined
   const extensions = (env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)
 

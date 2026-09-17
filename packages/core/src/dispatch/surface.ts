@@ -1,4 +1,4 @@
-import type { Surface } from '../schema/common.js'
+import type { ResolvedSurface, Surface } from '../schema/common.js'
 
 /**
  * Splitting a terminal so the seats can be watched side by side.
@@ -105,8 +105,42 @@ export function tmuxCommands(session: string, panes: Pane[]): SurfaceCommand[] {
   return commands
 }
 
+export interface SurfaceFacts {
+  platform: string
+  /** `$TMUX` is set inside a tmux session. */
+  inTmux: boolean
+  /** `$TERM_PROGRAM` is `vscode` in the editor's integrated terminal. */
+  inVsCode: boolean
+}
+
+/**
+ * Turn `auto` into the surface this terminal can actually do.
+ *
+ * The order is about where the panes land. Splitting the terminal you are already in is
+ * the only thing that feels like splitting; opening panes in a different window is worse
+ * than opening none, because you have to go and find them.
+ *
+ * Inside tmux, split tmux. Inside the VS Code terminal, leave it to the companion
+ * extension -- throwing a Windows Terminal window at someone working in the editor is the
+ * jarring case. Otherwise, on Windows, split Windows Terminal.
+ *
+ * Windows Terminal is not probed for first, and that is deliberate. It ships with Windows
+ * 11, and the obvious probe does not work: installed from the Store, `wt.exe` is an app
+ * execution alias, which is a reparse point Node cannot stat -- `existsSync` says false for
+ * a program `where` finds and the shell runs. Running `wt` is the honest test, it is
+ * already non-fatal, and it fails with a line you can read rather than a feature that
+ * quietly does nothing.
+ */
+export function resolveSurface(requested: Surface, facts: SurfaceFacts): ResolvedSurface {
+  if (requested !== 'auto') return requested
+  if (facts.inTmux) return 'tmux'
+  if (facts.inVsCode) return 'vscode'
+  if (facts.platform === 'win32') return 'wt'
+  return 'none'
+}
+
 export interface SurfacePlan {
-  surface: Surface
+  surface: ResolvedSurface
   commands: SurfaceCommand[]
   /** Things the user should know before this runs. */
   notes: string[]
@@ -114,7 +148,7 @@ export interface SurfacePlan {
 
 /** Work out how to show these panes on the chosen surface. */
 export function planSurface(
-  surface: Surface,
+  surface: ResolvedSurface,
   panes: Pane[],
   options: { session?: string } = {},
 ): SurfacePlan {

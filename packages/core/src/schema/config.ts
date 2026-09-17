@@ -29,7 +29,7 @@ export const ConfigSchema = z.object({
   dispatch: z
     .object({
       mode: DispatchModeSchema.default('auto'),
-      surface: SurfaceSchema.default('none'),
+      surface: SurfaceSchema.default('auto'),
       /** Agent Teams guidance is 3-5 active members; more than that coordinates badly. */
       max_active: z.number().int().min(1).max(12).default(5),
       hard_limit: z.number().int().min(1).max(20).default(8),

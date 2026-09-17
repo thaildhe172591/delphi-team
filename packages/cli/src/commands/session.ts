@@ -10,11 +10,13 @@ import {
   openTasks,
   readOr,
   readYaml,
+  type Surface,
 } from '@delphi-team/core'
 import { Command } from 'commander'
 import { execa } from 'execa'
 import { requireInitialised, resolveProject, UserError } from '../context.js'
 import { createReporter } from '../output.js'
+import { openPanes, reportSurface } from '../surface.js'
 
 /** `<prefix>-<seat>`, the naming convention the orchestrator addresses seats by. */
 function sessionName(slug: string, seat: string, prefixLength: number): string {
@@ -127,6 +129,7 @@ export function dispatchCommand(): Command {
     .argument('<id>')
     .option('--model <model>')
     .option('--effort <effort>')
+    .option('--surface <surface>', 'auto | wt | tmux | vscode | desktop | none')
     .option('--project <slug>')
     .option('--dry-run', 'print the prompt and the command, start nothing')
     .option('--json', 'machine-readable output')
@@ -183,10 +186,23 @@ export function dispatchCommand(): Command {
         detail: `session ${sessionId}`,
       })
 
-      report.emit({ seat, id, sessionId, name, model, effort }, () => {
-        report.line(`Started ${name} (${sessionId}) on ${id}.`)
-        report.line(`  claude attach ${sessionId}   to watch it`)
-      })
+      // One seat is still a seat: it gets a pane like any other, so starting work here
+      // looks the same as starting it through `dept up`.
+      const opened = await openPanes(
+        context,
+        (options.surface as Surface | undefined) ?? context.config.dispatch.surface,
+        [{ title: seat, id: sessionId }],
+        { session: slug },
+      )
+
+      report.emit(
+        { seat, id, sessionId, name, model, effort, surface: opened.plan, surfaceRan: opened.ran },
+        () => {
+          report.line(`Started ${name} (${sessionId}) on ${id}.`)
+          report.line(`  claude attach ${sessionId}   to watch it`)
+          reportSurface(report, opened)
+        },
+      )
     })
 }
 

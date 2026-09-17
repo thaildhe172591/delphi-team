@@ -15,7 +15,10 @@ dispatch:
   # session and no seat needs a different effort from the orchestrator, background
   # sessions when they can be launched, and manual otherwise.
   mode: auto
-  surface: none # wt | tmux | vscode | desktop | none
+  # auto splits the terminal you are already in: tmux inside tmux, the companion extension
+  # inside VS Code, the current Windows Terminal window otherwise. `none` leaves the seats
+  # in the background, where `claude attach <id>` still reaches them.
+  surface: auto # auto | wt | tmux | vscode | desktop | none
   # Three to five seats working at once coordinate well. More do not.
   max_active: 5
   hard_limit: 8

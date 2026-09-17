@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
@@ -26,6 +27,7 @@ import { execa } from 'execa'
 import matter from 'gray-matter'
 import { type Context, requireInitialised, resolveProject, UserError } from '../context.js'
 import { columns, createReporter, plural } from '../output.js'
+import { claudeBinary, openPanes, reportSurface, surfaceFor } from '../surface.js'
 
 /**
  * Starting, watching and stopping a department.
@@ -146,6 +148,24 @@ export function deptCommand(): Command {
         running,
       })
 
+      // A team can name a seat the project never built. `quick-fix` names a reviewer; a
+      // project scaffolded from `feature` has none, so the plan held it as "nothing
+      // assigned yet" and the review step went missing without anyone noticing. Say it.
+      for (const member of team.seats) {
+        if (member.seat === 'orchestrator' || existsSync(context.paths.agent(member.seat))) continue
+        const hasWork = board.tasks.some(
+          (task) => task.owner === member.seat && (task.status === 'ready' || task.status === 'doing'),
+        )
+        plan.problems.push({
+          severity: hasWork ? 'block' : 'warn',
+          message: `the "${teamName}" team has a ${member.seat} seat, and this project has not built one`,
+          fix: hasWork
+            ? `run \`delphi role build ${member.seat}\`; work is assigned to it and the dispatch would fail`
+            : `run \`delphi role build ${member.seat}\`, or its step in this team quietly never happens`,
+        })
+        if (hasWork) plan.ok = false
+      }
+
       // A story whose frontmatter does not parse looks exactly like a story with no
       // acceptance criteria, and reporting the symptom sends the user to fix the wrong
       // thing. Say what is actually broken, first.
@@ -195,7 +215,11 @@ export function deptCommand(): Command {
         // The session ids do not exist yet, so the surface command is shown with a
         // placeholder. Showing it is the point: this is the command that would open
         // windows on your screen, and you should be able to read it before it does.
-        const requestedSurface = (options.surface as Surface | undefined) ?? context.config.dispatch.surface
+        // Resolved here too, so the dry run shows the surface the real run would pick
+        // rather than the word `auto`.
+        const requestedSurface = surfaceFor(
+          (options.surface as Surface | undefined) ?? context.config.dispatch.surface,
+        )
         const surfacePlan =
           requestedSurface === 'none' || plan.active.length === 0
             ? null
@@ -203,7 +227,9 @@ export function deptCommand(): Command {
                 requestedSurface,
                 plan.active.map((seatPlan) => ({
                   title: seatPlan.seat,
-                  command: 'claude',
+                  // The same executable the real run would launch, so the printed command
+                  // is one you could paste rather than one that only looks right.
+                  command: claudeBinary(),
                   args: ['attach', '<session-id>'],
                   cwd: context.root,
                 })),
@@ -290,39 +316,25 @@ export function deptCommand(): Command {
         detail: started.map((s) => `${s.seat}:${s.id}`).join(' '),
       })
 
-      const surface = (options.surface as Surface | undefined) ?? context.config.dispatch.surface
-      const surfacePlan =
-        surface === 'none' || started.length === 0
-          ? null
-          : planSurface(
-              surface,
-              started.map((s) => ({
-                title: s.seat,
-                command: 'claude',
-                args: ['attach', s.id],
-                cwd: context.root,
-              })),
-              { session: slug },
-            )
-
       // `wt -w 0 split-pane` was confirmed on 2026-09-17 to open in the current window,
-      // so this runs rather than only suggesting. A failure here is reported and never
-      // fatal: the seats are already working, and a terminal that did not split is cosmetic.
-      let surfaceRan = false
-      let surfaceError: string | null = null
-      if (surfacePlan && surfacePlan.commands.length > 0) {
-        try {
-          for (const command of surfacePlan.commands) {
-            await execa(command.command, command.args, { cwd: context.root, input: '' })
-          }
-          surfaceRan = true
-        } catch (error) {
-          surfaceError = error instanceof Error ? (error.message.split('\n')[0] ?? '') : String(error)
-        }
-      }
+      // so this runs rather than only suggesting.
+      const opened = await openPanes(
+        context,
+        (options.surface as Surface | undefined) ?? context.config.dispatch.surface,
+        started.map((s) => ({ title: s.seat, id: s.id })),
+        { session: slug },
+      )
 
       report.emit(
-        { ok: true, mode: decision.mode, started, plan, surface: surfacePlan, surfaceRan, surfaceError },
+        {
+          ok: true,
+          mode: decision.mode,
+          started,
+          plan,
+          surface: opened.plan,
+          surfaceRan: opened.ran,
+          surfaceError: opened.error,
+        },
         () => {
           printPlan(report, plan, decision)
           report.line(`\nStarted ${plural(started.length, 'seat')}:`)
@@ -331,16 +343,7 @@ export function deptCommand(): Command {
           )) {
             report.line(line)
           }
-          if (surfacePlan) {
-            for (const note of surfacePlan.notes) report.line(`\n${note}`)
-            if (surfacePlan.commands.length > 0) {
-              // Printed as well as run. A command that rearranges your screen should not be
-              // a surprise, and this is also what you paste if it does not work.
-              report.line(`\n${surfaceRan ? 'Split the terminal with:' : 'To split the terminal, run:'}`)
-              for (const command of surfacePlan.commands) report.line(`  ${renderCommand(command)}`)
-              if (surfaceError) report.line(`\n  that failed: ${surfaceError}`)
-            }
-          }
+          reportSurface(report, opened)
         },
       )
     })

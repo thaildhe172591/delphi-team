@@ -54,5 +54,7 @@ export const DispatchModeSchema = z.enum(['auto', 'teams', 'sessions', 'manual']
 export type DispatchMode = z.infer<typeof DispatchModeSchema>
 
 /** How the user watches seats work (HARNESS_DESIGN section 6). */
-export const SurfaceSchema = z.enum(['wt', 'tmux', 'vscode', 'desktop', 'none'])
+export const SurfaceSchema = z.enum(['auto', 'wt', 'tmux', 'vscode', 'desktop', 'none'])
 export type Surface = z.infer<typeof SurfaceSchema>
+/** What `auto` has already been decided into. `planSurface` only ever sees one of these. */
+export type ResolvedSurface = Exclude<Surface, 'auto'>
