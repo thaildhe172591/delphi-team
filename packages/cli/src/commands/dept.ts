@@ -74,6 +74,29 @@ function storyFields(data: Record<string, unknown>) {
   }
 }
 
+/**
+ * Is this session actually working, as opposed to merely existing?
+ *
+ * The active limit exists so that three to five seats do not spend the shift coordinating
+ * with each other. That is about concurrent *work*. A background session that has finished
+ * its turn sits at `state: blocked, status: idle` waiting for a message -- it is not `done`,
+ * which only happens once it is stopped -- so filtering on `state !== 'done'` counted every
+ * seat that had ever run and the department could never start the next story.
+ */
+function isWorking(entry: ClaudeAgentEntry): boolean {
+  return entry.state === 'working' || entry.status === 'busy'
+}
+
+/** How a seat is doing, in a word a person can act on. */
+function seatState(entry: ClaudeAgentEntry): string {
+  // `blocked` is what Claude Code calls a session sitting idle after its turn, and reading
+  // it as trouble is exactly the wrong conclusion. Say what it is.
+  if (entry.waitingFor) return 'waiting'
+  if (isWorking(entry)) return 'working'
+  if (entry.status === 'idle') return 'idle'
+  return entry.state ?? entry.status ?? '-'
+}
+
 /** Sessions delphi started, joined to what `claude agents --json` can see. */
 async function liveSeats(context: Context, slug: string) {
   const dispatched = new Map<
@@ -136,7 +159,7 @@ export function deptCommand(): Command {
 
       const { agents } = await liveSeats(context, slug)
       const running = (agents ?? [])
-        .filter((a) => a.kind === 'background' && a.state !== 'done' && a.name)
+        .filter((a) => a.kind === 'background' && a.name && isWorking(a))
         .map((a) => a.name as string)
 
       const plan = planDepartment({
@@ -376,7 +399,7 @@ export function deptCommand(): Command {
           seat: record?.seat ?? (entry.name as string),
           name: entry.name ?? '-',
           id: entry.id ?? '-',
-          state: entry.state ?? entry.status ?? '-',
+          state: seatState(entry),
           // This is how a seat stuck on a permission prompt announces itself.
           waitingFor: entry.waitingFor ?? null,
           model: record?.model ?? '-',

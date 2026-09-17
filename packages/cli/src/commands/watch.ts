@@ -62,7 +62,14 @@ async function snapshot(context: Context, slug: string): Promise<Snapshot> {
       const record = dispatched.get(entry.name as string)
       return {
         seat: record?.seat ?? (entry.name as string),
-        state: entry.state ?? entry.status ?? '-',
+        // `blocked` is Claude Code's word for a session idle after its turn. Printing it
+        // as blocked next to a board that says nothing is blocked is a contradiction the
+        // reader has to resolve, and they resolve it by distrusting the view.
+        state: entry.waitingFor
+          ? 'waiting'
+          : entry.state === 'working' || entry.status === 'busy'
+            ? 'working'
+            : (entry.status ?? entry.state ?? '-'),
         waitingFor: entry.waitingFor ?? null,
         task: record?.task ?? '-',
       }
