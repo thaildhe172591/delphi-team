@@ -210,7 +210,7 @@ export function runChecks(facts: DoctorFacts): Check[] {
 
   // --- images, on Windows -----------------------------------------------------------
   if (facts.platform === 'win32') {
-    const rebound = facts.keybindings !== null && facts.keybindings.includes('chat:imagePaste')
+    const rebound = facts.keybindings?.includes('chat:imagePaste') ?? false
     checks.push({
       id: 'image-paste',
       level: 'ok',

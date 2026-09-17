@@ -15,7 +15,7 @@
     "lint:fix": "biome check --write .",
     "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/cli",
     "sync-version": "node scripts/sync-version.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm build && pnpm test",
+    "check": "pnpm lint && pnpm build && pnpm typecheck && pnpm test",
     "build:templates": "node scripts/build-templates.mjs"
   },
   "devDependencies": {
