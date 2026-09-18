@@ -23,7 +23,7 @@ jobs:
         # Windows first: it is the primary target (REQUIREMENTS R14).
         os: [windows-latest, macos-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
 
@@ -65,7 +65,7 @@ jobs:
     name: node 22 (engines floor)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -78,7 +78,7 @@ jobs:
     name: generated files are current
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -101,7 +101,7 @@ jobs:
     name: paths with spaces and non-ASCII
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           path: 'Dự án delphi/check out'
       - uses: pnpm/action-setup@v6
