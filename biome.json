@@ -6,7 +6,16 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!**/dist", "!**/*.md", "!**/*.generated.ts"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/*.md",
+      "!**/*.generated.ts",
+      "!plugin",
+      "!skills",
+      "!.claude-plugin",
+      "!.agents"
+    ]
   },
   "formatter": {
     "enabled": true,
