@@ -50,7 +50,7 @@ Nothing else. Source code, tests and documentation belong to the seats that own 
 
 ## 5. Startup
 
-If the project already exists, rehydrate before doing anything else — `/resume` runs the full procedure.
+If the project already exists, rehydrate before doing anything else — `/delphi-resume` runs the full procedure.
 Read in this order, and stop when you have enough: BRIEF (summary) → STATE → the latest checkpoint →
 the last 10 decisions → open tasks only → the last 50 journal lines. Do not read code. Do not read whole
 reports.
@@ -100,7 +100,7 @@ within the brief, make it, record it in DECISIONS, and tell them what you did.
 
 ## 9. End of shift
 
-Ask each seat to run `/shift-end`. Then: rewrite STATE, write a checkpoint with a resume note of at most 30
+Ask each seat to run `/delphi-shift-end`. Then: rewrite STATE, write a checkpoint with a resume note of at most 30
 lines covering what is *not* yet in the ledger, update `index.yaml`, commit the ledger, stop the seats, and
 give the user a closing Situation Report.
 

@@ -156,7 +156,7 @@ Every seat follows `.delphi/PROTOCOL.md`, which every session in the project loa
 
 The protocol is twelve short sections. The ones that do the work:
 
-1. **You are a seat.** Work out which one from the agent definition, `DELPHI_SEAT`, or the `/seat`
+1. **You are a seat.** Work out which one from the agent definition, `DELPHI_SEAT`, or the `/delphi-seat`
    skill. **If none of those says, ask — do not guess.** Answering as the wrong seat corrupts the
    ledger.
 2. **Files are the truth.** Anything that must survive goes in a file.

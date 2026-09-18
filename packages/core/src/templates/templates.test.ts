@@ -74,7 +74,7 @@ describe('shipped roles', () => {
   })
 
   it.each([...STANDARD_SEATS, ...OPTIONAL_SEATS])('%s fits what a session will actually load', (seat) => {
-    // The /seat skill is re-attached after compaction with only the first 5,000 tokens
+    // The /delphi-seat skill is re-attached after compaction with only the first 5,000 tokens
     // kept, so a role that runs long loses its ending exactly when it is needed.
     const { body } = readRole(seat)
     expect(body.split('\n').length, `${seat} body is too long`).toBeLessThanOrEqual(250)
@@ -298,7 +298,17 @@ describe('building a real seat from real templates', () => {
 })
 
 describe('shipped skills', () => {
-  const SKILLS = ['dept', 'resume', 'seat', 'role', 'shift-end', 'checkpoint']
+  // Every skill carries the `delphi-` prefix. `resume` collided with Claude Code's own
+  // `/resume`: typing it ran delphi's instead of the built-in, silently. Prefixing only the
+  // one that collided would leave you guessing which of the six were which.
+  const SKILLS = [
+    'delphi-dept',
+    'delphi-resume',
+    'delphi-seat',
+    'delphi-role',
+    'delphi-shift-end',
+    'delphi-checkpoint',
+  ]
 
   it('ships the documented set', () => {
     for (const name of SKILLS) {
@@ -316,13 +326,13 @@ describe('shipped skills', () => {
   it('stops the model from invoking the two skills with side effects', () => {
     // ORCHESTRATION_SPEC section 12: shift-end and checkpoint write files, so they are
     // run deliberately by a person, not picked up because a sentence sounded relevant.
-    for (const name of ['shift-end', 'checkpoint']) {
+    for (const name of ['delphi-shift-end', 'delphi-checkpoint']) {
       expect(readSkill(name).frontmatter['disable-model-invocation'], name).toBe(true)
     }
   })
 
   it('leaves the skills a seat needs to reach for auto-invocable', () => {
-    for (const name of ['dept', 'resume', 'seat', 'role']) {
+    for (const name of ['delphi-dept', 'delphi-resume', 'delphi-seat', 'delphi-role']) {
       expect(readSkill(name).frontmatter['disable-model-invocation'], name).toBeUndefined()
     }
   })
@@ -330,7 +340,7 @@ describe('shipped skills', () => {
   it('puts the seat identity where a compaction will keep it', () => {
     // Only the first 5,000 tokens of a skill are re-attached after auto-compaction, so
     // the rules that matter have to come before the prose that explains them.
-    const { body } = readSkill('seat')
+    const { body } = readSkill('delphi-seat')
     const rules = body.indexOf('outrank your own judgement')
     expect(rules).toBeGreaterThan(-1)
     expect(body.slice(0, rules).length).toBeLessThan(2000)

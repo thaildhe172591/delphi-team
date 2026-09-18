@@ -1,5 +1,5 @@
 ---
-name: seat
+name: delphi-seat
 description: Take a seat in the department. Use at the start of a session you opened yourself in Claude Desktop or the VS Code extension, when the orchestrator has told you which seat to be.
 argument-hint: <seat> [project-slug]
 ---
@@ -31,7 +31,7 @@ Then stop and wait for work. Do not start on a task you were not given.
 
 ## When you finish
 
-Run `/shift-end`. It updates the story and the board, writes your report, and saves what you learned.
+Run `/delphi-shift-end`. It updates the story and the board, writes your report, and saves what you learned.
 
 ## If something is unclear
 

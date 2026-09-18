@@ -790,7 +790,7 @@ export function shiftCommand(): Command {
         if (unfinished.length > 0) {
           report.line(`\n${plural(unfinished.length, 'task')} still in flight:`)
           for (const t of unfinished) report.line(`  ${t.id}  ${t.status}  ${t.owner}  ${t.title}`)
-          report.line('Each of those seats should run /shift-end before it stops.')
+          report.line('Each of those seats should run /delphi-shift-end before it stops.')
         }
         if (noReason.length > 0) {
           report.line('\nBlocked with no reason recorded — nobody can act on these tomorrow:')

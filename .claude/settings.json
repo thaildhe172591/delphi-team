@@ -33,6 +33,17 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "delphi hook SubagentStop",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

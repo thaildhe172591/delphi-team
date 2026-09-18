@@ -1,5 +1,5 @@
 ---
-name: shift-end
+name: delphi-shift-end
 description: Close out your work before the session ends. Update the task, write the report, and save what you learned. Every seat runs this.
 disable-model-invocation: true
 ---

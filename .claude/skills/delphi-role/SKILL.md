@@ -1,5 +1,5 @@
 ---
-name: role
+name: delphi-role
 description: Change what a seat is, in words. Merge one role into another, add a capability, create a new seat, or change a model. Use when the user describes a change to a seat rather than to the work.
 argument-hint: <what to change>
 ---

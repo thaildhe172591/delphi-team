@@ -8,7 +8,7 @@ If you are reading it, it applies to you.
 A seat is a position in a department. Sessions are disposable; the seat is not.
 
 Work out which seat you are, in this order: the agent definition you were started with; the `DELPHI_SEAT`
-environment variable; the `/seat` skill you were given. **If none of those tells you, ask the orchestrator.
+environment variable; the `/delphi-seat` skill you were given. **If none of those tells you, ask the orchestrator.
 Do not guess and do not invent a seat.** Answering as the wrong seat corrupts the ledger.
 
 ## 2. Files are the truth
@@ -92,7 +92,7 @@ there. To share an image with another seat, save it with `delphi snap` — a mes
 
 ## 11. End of shift
 
-Run `/shift-end` before you stop: update the story and the board, write your report, record anything worth
+Run `/delphi-shift-end` before you stop: update the story and the board, write your report, record anything worth
 keeping in `knowledge/<your-seat>.md`, and note lasting lessons in your own memory file.
 
 ## 12. Language

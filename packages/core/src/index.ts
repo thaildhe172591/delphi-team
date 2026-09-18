@@ -61,6 +61,11 @@ export {
   type Settings,
 } from './init/settings.js'
 export {
+  isSupersededSkill,
+  RENAMED_SKILLS,
+  supersededSkills,
+} from './init/superseded.js'
+export {
   addTask,
   BoardError,
   checkTransition,

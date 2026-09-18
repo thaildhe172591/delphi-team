@@ -1,5 +1,5 @@
 ---
-name: dept
+name: delphi-dept
 description: Form a department for a piece of work and hand out the first round of tasks. Use when the user describes something to build, fix or investigate rather than asking a question.
 argument-hint: <what needs doing> [--team <name>] [--mode auto|teams|sessions|manual]
 ---
@@ -23,7 +23,7 @@ correct you.
 delphi project list --json
 ```
 
-If this belongs to an existing project, run `/resume <slug>` first and work from where it actually is. If it
+If this belongs to an existing project, run `/delphi-resume <slug>` first and work from where it actually is. If it
 is new, `delphi project new <slug> --title "<title>"`, then write BRIEF.md.
 
 ## 3. Choose the department

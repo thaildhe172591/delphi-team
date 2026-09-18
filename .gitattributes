@@ -1,3 +1,10 @@
+# delphi:start
+# delphi writes the ledger with LF on every platform. Without these, git on Windows checks
+# it out as CRLF and every line delphi appends then shows as a whole-file change.
+.delphi/** text eol=lf
+.claude/** text eol=lf
+# delphi:end
+
 * text=auto eol=lf
 *.png binary
 *.ico binary

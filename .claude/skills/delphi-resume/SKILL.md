@@ -1,5 +1,5 @@
 ---
-name: resume
+name: delphi-resume
 description: Rebuild the picture of an ongoing project in a fresh orchestrator session, check it against reality, and report the situation. Use at the start of any session that continues yesterday work.
 argument-hint: [project-slug]
 ---

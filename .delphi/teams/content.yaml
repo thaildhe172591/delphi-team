@@ -1,0 +1,13 @@
+name: content
+description: Research, write, edit. The seats a piece of prose needs to be true as well as readable.
+seats:
+  - seat: orchestrator
+  - seat: researcher
+  - seat: tech-writer
+    when: phase in [build, verify]
+  - seat: editor
+    when: phase in [verify]
+limits:
+  max_active: 3
+dispatch:
+  mode: auto

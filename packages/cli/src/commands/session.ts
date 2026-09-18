@@ -30,7 +30,7 @@ function sessionName(slug: string, seat: string, prefixLength: number): string {
 /**
  * Everything a seat needs to start working, in one call.
  *
- * The `/seat` skill runs this. It exists so a manual session in Claude Desktop reaches the
+ * The `/delphi-seat` skill runs this. It exists so a manual session in Claude Desktop reaches the
  * same state a dispatched one would, rather than a human pasting a role description.
  */
 export function seatCommand(): Command {

@@ -1,5 +1,5 @@
 ---
-name: checkpoint
+name: delphi-checkpoint
 description: Save a restore point for the project before compacting, before a large change, or at the end of a shift.
 argument-hint: [note]
 disable-model-invocation: true

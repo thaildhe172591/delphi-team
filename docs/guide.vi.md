@@ -155,7 +155,7 @@ import nó, và **một import sống qua compaction**, trong khi một prompt d
 
 Protocol có mười hai mục ngắn. Những mục làm việc thật sự:
 
-1. **Anh là một seat.** Xác định là seat nào qua agent definition, `DELPHI_SEAT`, hoặc skill `/seat`.
+1. **Anh là một seat.** Xác định là seat nào qua agent definition, `DELPHI_SEAT`, hoặc skill `/delphi-seat`.
    **Nếu không cái nào nói, thì hỏi — đừng đoán.** Trả lời nhầm seat là làm hỏng ledger.
 2. **File mới là sự thật.** Thứ gì phải sống sót thì phải nằm trong file.
 3. **Ở yên trong phạm vi file của mình.** Cần sửa thứ ngoài phạm vi? Nhắn cho seat sở hữu nó. *Xoá

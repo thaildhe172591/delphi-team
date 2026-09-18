@@ -244,7 +244,7 @@ export function runChecks(facts: DoctorFacts): Check[] {
         id: `state:${project.slug}`,
         level: 'warn',
         title: `${project.slug}: STATE.md is ${Math.round(project.stateAgeHours)} hours old with ${project.openTasks} tasks open`,
-        fix: 'run `/resume` and let the orchestrator reconcile it',
+        fix: 'run `/delphi-resume` and let the orchestrator reconcile it',
       })
     }
     if (project.checkpointAgeHours !== null && project.checkpointAgeHours > CHECKPOINT_STALE_HOURS) {
@@ -252,7 +252,7 @@ export function runChecks(facts: DoctorFacts): Check[] {
         id: `checkpoint:${project.slug}`,
         level: 'warn',
         title: `${project.slug}: the newest checkpoint is ${Math.round(project.checkpointAgeHours / 24)} days old`,
-        fix: 'run `/checkpoint` at the end of the next shift',
+        fix: 'run `/delphi-checkpoint` at the end of the next shift',
       })
     }
   }

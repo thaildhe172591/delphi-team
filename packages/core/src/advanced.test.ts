@@ -29,7 +29,17 @@ describe('plugin export', () => {
     for (const seat of ['orchestrator', 'dev-be', 'reviewer', 'devops']) {
       expect(paths, seat).toContain(`agents/${seat}.md`)
     }
-    for (const skill of ['dept', 'resume', 'seat', 'role', 'shift-end', 'checkpoint']) {
+    // Every skill is prefixed. `resume` collided with Claude Code's own `/resume`, so
+    // typing it ran delphi's instead of the built-in — and a prefix on one of them only
+    // would leave you guessing which.
+    for (const skill of [
+      'delphi-dept',
+      'delphi-resume',
+      'delphi-seat',
+      'delphi-role',
+      'delphi-shift-end',
+      'delphi-checkpoint',
+    ]) {
       expect(paths, skill).toContain(`skills/${skill}/SKILL.md`)
     }
   })

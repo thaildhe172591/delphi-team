@@ -10,7 +10,9 @@ import {
   isoNow,
   pendingWrites,
   planInit,
+  RENAMED_SKILLS,
   readOr,
+  supersededSkills,
   writeAtomic,
 } from '@delphi-team/core'
 import { Command } from 'commander'
@@ -53,8 +55,20 @@ export function upgradeCommand(): Command {
         // ignore
       }
 
+      // The old unprefixed skill names, read so the check below can tell the one delphi
+      // shipped from one the user happens to have written at the same path.
+      for (const name of RENAMED_SKILLS) {
+        const path = `.claude/skills/${name}/SKILL.md`
+        try {
+          existing[path] = await readFile(join(context.root, path), 'utf8')
+        } catch {
+          // Absent is the normal case for a project set up after the rename.
+        }
+      }
+
       const plan = planInit({ existing })
       const pending = pendingWrites(plan)
+      const superseded = supersededSkills(existing)
 
       if (!options.dryRun) {
         for (const write of pending) {
@@ -62,22 +76,40 @@ export function upgradeCommand(): Command {
           await mkdir(dirname(target), { recursive: true })
           await writeFile(target, write.content, 'utf8')
         }
+        // Writing the prefixed names and leaving the old ones behind would fix nothing: the
+        // project would have both, and `/resume` would still shadow Claude Code's own.
+        for (const name of superseded) {
+          await rm(join(context.root, '.claude', 'skills', name), { recursive: true, force: true })
+        }
       }
 
       report.emit(
         {
           dryRun: Boolean(options.dryRun),
           changes: pending.map(({ path, action, note }) => ({ path, action, ...(note ? { note } : {}) })),
+          superseded,
         },
         () => {
-          if (pending.length === 0) {
+          if (pending.length === 0 && superseded.length === 0) {
             report.line('Everything is already current.')
             return
           }
-          report.line(options.dryRun ? 'Would update:' : 'Updated:')
-          for (const line of columns(pending.map((w) => [`  ${w.action}`, w.path, w.note ?? '']))) {
-            report.line(line)
+          if (pending.length > 0) {
+            report.line(options.dryRun ? 'Would update:' : 'Updated:')
+            for (const line of columns(pending.map((w) => [`  ${w.action}`, w.path, w.note ?? '']))) {
+              report.line(line)
+            }
           }
+
+          if (superseded.length > 0) {
+            report.line(
+              options.dryRun
+                ? '\nWould remove the old unprefixed skills, which shadow Claude Code commands:'
+                : '\nRemoved the old unprefixed skills, which shadowed Claude Code commands:',
+            )
+            for (const name of superseded) report.line(`  .claude/skills/${name}/`)
+          }
+
           report.line('\nYour config and the project block inside each seat were left alone.')
           report.line('Seats that are running will not pick this up. Restart them.')
         },

@@ -117,7 +117,7 @@ The delphi-team roles, protocol and skills as a Claude Code plugin.
 
 - Agent definitions for every seat: orchestrator, BA, PM, tech lead, backend, frontend, database, QA,
   tester, reviewer, and the optional ones.
-- The skills that drive them: \`/dept\`, \`/resume\`, \`/seat\`, \`/role\`, \`/shift-end\`, \`/checkpoint\`.
+- The skills that drive them: \`/delphi-dept\`, \`/delphi-resume\`, \`/delphi-seat\`, \`/delphi-role\`, \`/delphi-shift-end\`, \`/delphi-checkpoint\`.
 - \`PROTOCOL.md\`, the rules every seat follows.
 
 ## What you do not get
