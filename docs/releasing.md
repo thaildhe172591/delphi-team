@@ -8,6 +8,25 @@ reviewers. A tag starts the pipeline; it does not finish it.
 
 ---
 
+## A release, in full
+
+Everything below this is either the one-time setup or the detail. The release itself is five
+steps, and three of them are you saying yes:
+
+```bash
+pnpm changeset                              # one line describing the change
+#   merge the "chore: version packages" pull request that appears
+git tag v0.1.2 && git push origin v0.1.2
+#   approve `npm-stage` and `pypi` on the run's page — one screen, two tickboxes
+npm stage approve <stage-id>                # 2FA; `npm stage list delphi-team` gives the id
+```
+
+The last line is the only thing no machine can do, which is the point of it. Everything before it
+— lint, build, typecheck, tests, six binaries, six wheels, checksums, an SBOM, and the wheel
+actually being run — happens before you are asked anything.
+
+---
+
 ## One-time setup
 
 These are the parts nobody can do for you: they need accounts you own. Do them once, in this
