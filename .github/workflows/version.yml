@@ -1,0 +1,48 @@
+name: Version
+
+# Turns the changesets on main into a "Version Packages" pull request: the version bump, the
+# CHANGELOG entry, and `pnpm sync-version` so the PyPI package and the plugin manifest agree
+# with npm. It publishes nothing — merging the PR and tagging the merge is what starts a
+# release, and that is a decision a person makes.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: version-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version:
+    name: version packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: changesets/action@v1
+        with:
+          # One version across npm, PyPI, the plugin manifest and the GitHub release. Doing
+          # it here rather than by hand is what stops them drifting apart between releases.
+          version: pnpm changeset version && pnpm sync-version
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

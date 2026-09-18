@@ -1,0 +1,328 @@
+name: Release
+
+# Publishing is a stop point. Nothing here reaches a registry without a person pressing
+# approve: each publish job names a GitHub environment, and those environments carry
+# required reviewers. A tag starts the pipeline; it does not finish it.
+#
+# The order is PACKAGING_SPEC section 6: verify, build, npm@next, TestPyPI, PyPI, npm@latest,
+# GitHub release. Anything that can be checked is checked before anything is published.
+#
+# NOTE: the filename matters. npm trusted publishing is configured against this exact
+# workflow filename, so renaming this file breaks publishing until npmjs is updated to match.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Build and check everything, publish nothing'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Trusted publishing needs npm 11.5.1+ on Node 22.14+. The runner's bundled npm is older
+  # than that for long enough after a Node release to be worth pinning rather than hoping.
+  NPM_VERSION: '11.5.1'
+
+jobs:
+  verify:
+    name: verify the tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - name: Lint, build, typecheck, test
+        run: pnpm check
+
+      - name: The loop still stops when it should
+        run: node scripts/loop-lab.mjs
+
+      - id: version
+        name: The tag and the package agree on the version
+        run: |
+          package=$(node -p "require('./packages/cli/package.json').version")
+          tag="${GITHUB_REF_NAME#v}"
+          echo "version=$package" >> "$GITHUB_OUTPUT"
+
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$package" != "$tag" ]; then
+            echo "::error::tag $GITHUB_REF_NAME says $tag, packages/cli/package.json says $package."
+            echo "::error::Run \`pnpm sync-version\` and tag the commit that changed it."
+            exit 1
+          fi
+          echo "releasing $package"
+
+      - name: Every distribution reports the same version
+        run: |
+          python=$(grep -oP '^version = "\K[^"]+' python/pyproject.toml)
+          test "$python" = "${{ steps.version.outputs.version }}" || {
+            echo "::error::python/pyproject.toml says $python. Run \`pnpm sync-version\`."
+            exit 1
+          }
+
+      - name: The npm tarball is self-contained and carries its README
+        run: |
+          cd packages/cli && npm pack --dry-run --json > /tmp/pack.json
+          node -e '
+            const [pack] = require("/tmp/pack.json")
+            const names = pack.files.map((f) => f.path)
+            for (const required of ["README.md", "README.vi.md", "dist/index.js"]) {
+              if (!names.includes(required)) throw new Error(`the tarball is missing ${required}`)
+            }
+            console.log(`${names.length} files, ${(pack.size / 1024).toFixed(0)} KB`)
+          '
+
+  binaries:
+    name: standalone binaries
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: oven-sh/setup-bun@v2
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # bun cross-compiles every target from one host, which is why it was chosen over Node
+      # SEA and pkg (ADR-0003). One runner, six binaries.
+      - name: Compile every target
+        run: |
+          node scripts/build-binaries.mjs \
+            bun-windows-x64 bun-darwin-arm64 bun-darwin-x64 \
+            bun-linux-x64 bun-linux-arm64 bun-linux-x64-musl
+
+      - name: Checksums
+        working-directory: dist-binaries
+        run: |
+          find . -type f ! -name '*.sha256' -printf '%P\n' | sort | while read -r file; do
+            sha256sum "$file" >> SHA256SUMS
+          done
+          cat SHA256SUMS
+
+      # The SBOM is generated from the tarball that will actually be published, not from the
+      # development tree. `npm sbom` cannot read a pnpm workspace at all -- it chokes on
+      # `workspace:*` and on pnpm's node_modules layout -- and scanning the artifact is the
+      # more truthful answer anyway: it lists what ships.
+      - name: Pack the tarball the SBOM describes
+        run: cd packages/cli && npm pack --pack-destination ../../dist-binaries
+
+      - uses: anchore/sbom-action@v0
+        with:
+          path: dist-binaries
+          format: cyclonedx-json
+          output-file: dist-binaries/sbom.cdx.json
+          upload-artifact: false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: dist-binaries/
+          retention-days: 7
+
+  wheels:
+    name: wheel (${{ matrix.target }})
+    needs: binaries
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: bun-windows-x64, tag: py3-none-win_amd64, exe: delphi.exe }
+          - { target: bun-darwin-arm64, tag: py3-none-macosx_11_0_arm64, exe: delphi }
+          - { target: bun-darwin-x64, tag: py3-none-macosx_10_12_x86_64, exe: delphi }
+          - { target: bun-linux-x64, tag: py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64, exe: delphi }
+          - { target: bun-linux-arm64, tag: py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64, exe: delphi }
+          - { target: bun-linux-x64-musl, tag: py3-none-musllinux_1_2_x86_64, exe: delphi }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: dist-binaries
+
+      - name: Put this target's binary where the wheel looks for it
+        run: |
+          mkdir -p python/src/delphi_team/bin
+          cp "dist-binaries/${{ matrix.target }}/${{ matrix.exe }}" python/src/delphi_team/bin/
+          chmod +x "python/src/delphi_team/bin/${{ matrix.exe }}"
+
+      - name: Build
+        working-directory: python
+        env:
+          DELPHI_WHEEL_TAG: ${{ matrix.tag }}
+        run: |
+          python -m pip install --quiet build
+          python -m build --wheel --outdir ../dist-wheels
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.target }}
+          path: dist-wheels/
+          retention-days: 7
+
+  sdist:
+    name: sdist
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - working-directory: python
+        run: |
+          python -m pip install --quiet build
+          python -m build --sdist --outdir ../dist-wheels
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist-wheels/
+          retention-days: 7
+
+  npm-next:
+    name: npm @next
+    needs: [verify, binaries]
+    if: github.event_name == 'push' || !inputs.dry_run
+    runs-on: ubuntu-latest
+    environment: npm-next
+    permissions:
+      contents: read
+      id-token: write # trusted publishing, and provenance
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - run: npm install -g npm@${{ env.NPM_VERSION }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # `next` first, never `latest`. A package published straight to `latest` is installed
+      # by everyone the moment it exists, including if it is broken.
+      - name: Publish
+        working-directory: packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "Publishing with a token. Configure trusted publishing on npmjs and remove NPM_TOKEN."
+            npm publish --provenance --access public --tag next
+          else
+            echo "Publishing with trusted publishing (OIDC). Provenance is automatic."
+            npm publish --access public --tag next
+          fi
+
+  testpypi:
+    name: TestPyPI
+    needs: [wheels, sdist]
+    if: github.event_name == 'push' || !inputs.dry_run
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '{wheel-*,sdist}'
+          merge-multiple: true
+          path: dist
+      - run: ls -la dist
+
+      # TestPyPI before PyPI, so a broken wheel is found somewhere it can be deleted.
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  pypi:
+    name: PyPI
+    needs: testpypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '{wheel-*,sdist}'
+          merge-multiple: true
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  npm-latest:
+    name: npm @latest
+    needs: [npm-next, pypi]
+    runs-on: ubuntu-latest
+    environment: npm-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@${{ env.NPM_VERSION }}
+
+      # Moving the tag rather than publishing again: the artifact people get on `latest` is
+      # byte-for-byte the one that was on `next` and was installed from there first.
+      - name: Move latest onto this version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm dist-tag add delphi-team@${{ needs.verify.outputs.version }} latest
+
+  github-release:
+    name: GitHub release
+    needs: [npm-latest]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '{binaries,wheel-*,sdist}'
+          merge-multiple: true
+          path: release
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --verify-tag \
+            release/SHA256SUMS release/sbom.cdx.json \
+            $(find release -type f \( -name 'delphi' -o -name 'delphi.exe' -o -name '*.whl' -o -name '*.tar.gz' \))

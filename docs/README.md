@@ -17,6 +17,8 @@ lead, backend, frontend, DB, QA, tester, reviewer — each with its own role, me
 | [**Example departments**](../examples/README.md) | The three packs — solo developer, software team, content team — and how to apply one |
 | [**Writing a role**](writing-a-role.md) | Teaching delphi a job it does not know yet, and when not to |
 
+| [**Releasing**](releasing.md) | How a version reaches npm and PyPI, and the one-time setup only you can do |
+
 ## The idea
 
 A **seat** outlives the session that fills it.

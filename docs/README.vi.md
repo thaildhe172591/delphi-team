@@ -19,6 +19,8 @@ file riêng.
 | [**Phòng ban mẫu**](../examples/README.md) | Ba pack — solo-dev, software-team, content-team — và cách áp dụng *(tiếng Anh)* |
 | [**Viết một role**](writing-a-role.md) | Dạy delphi một công việc nó chưa biết, và khi nào thì không nên *(tiếng Anh)* |
 
+| [**Phát hành**](releasing.md) | Một phiên bản tới npm và PyPI thế nào, và phần cài đặt một lần chỉ anh làm được *(tiếng Anh)* |
+
 ## Ý tưởng
 
 **Một seat sống lâu hơn phiên đang ngồi vào nó.**

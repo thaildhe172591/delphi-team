@@ -1,0 +1,31 @@
+# PACKAGING_SPEC section 7: a lockfile is mandatory and dependencies are kept few, so the
+# ones that remain are worth watching. Weekly, grouped, so a dependency bump is one review
+# rather than nine.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Patches and minors together: individually they are noise, and reviewing them as one
+      # diff is the difference between reading it and rubber-stamping it.
+      minor-and-patch:
+        update-types: [minor, patch]
+    # A major is a decision, not an update. It arrives on its own so it gets read.
+
+  - package-ecosystem: pip
+    directory: /python
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+
+  # The release pipeline runs with `id-token: write` and can publish. An action pinned to a
+  # tag that moves under you is the supply-chain risk that matters most here.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
