@@ -42,7 +42,7 @@ jobs:
         run: pnpm coverage
 
       # The Python side is a shim, not a codebase: plain asserts, no test framework to install.
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Python shim self-check
