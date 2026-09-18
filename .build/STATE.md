@@ -27,7 +27,7 @@ front of a user without the owner answering a 2FA challenge.
 **v0.1.1 proved the automated path end to end (2026-09-18).** changeset -> `version.yml` opened
 the pull request -> CI -> merge -> tag -> release. npm went out under OIDC with no token in the
 repository at all, and the version sat *staged and uninstallable* until approved with 2FA -- the
-registry listed only 0.1.0 while 0.1.1 waited. The GitHub release came out correctly titled with
+registry listed only 0.1.0 while 0.1.1 waited, and went live the moment the owner approved it on npmjs with 2FA -- with SLSA provenance, verified by running `npx delphi-team@0.1.1 --version`. The GitHub release came out correctly titled with
 all six platform-named binaries, which is the C-024 fix working in CI rather than by hand.
 
 It cost three more defects, all in code that had been green for days because it had nothing to do
