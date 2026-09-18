@@ -73,12 +73,23 @@ note saying so at the top of that file.
 >
 > Two ways through it:
 >
-> 1. **A token, once.** Create a *granular* access token with read-and-write and a short expiry.
->    It has to cover **all packages**, because you cannot scope a token to a package that does not
->    exist — which is the other reason the expiry matters. Put it in the repository as the
->    `NPM_TOKEN` secret. Publish, configure trusted publishing, then **delete the secret**. Prefer
->    this: the first release goes through the whole pipeline, so you find out whether the pipeline
->    works while the stakes are a pre-alpha.
+> 1. **A token, once.** Create a *granular* access token with read-and-write, a short expiry, and
+>    **Bypass 2FA enabled**. Two of those need explaining:
+>
+>    - It has to cover **all packages**, because you cannot scope a token to a package that does
+>      not exist — which is the other reason the expiry matters.
+>    - **Bypass 2FA is not optional here.** Your account needs 2FA on, because approving a staged
+>      release later is a 2FA challenge. But with 2FA on and this capability off, npm answers a
+>      token publish with `EOTP` — it wants a one-time password, and CI has no one to ask. The
+>      capability takes precedence over the account setting for publishing, which is exactly the
+>      hole it exists to fill.
+>
+>    Put it in the repository as the `NPM_TOKEN` secret. Publish, configure trusted publishing,
+>    then **delete the secret**. Prefer this: the first release goes through the whole pipeline,
+>    so you find out whether the pipeline works while the stakes are a pre-alpha.
+>
+>    npm is retiring bypass-2FA tokens for direct publishing in January 2027. That is fine for a
+>    token that exists for one release and is deleted; it is not a thing to keep.
 > 2. **Publish by hand, once**, from your own npm login, then configure trusted publishing. No
 >    token ever exists — but the first version skips every gate, and you learn nothing about the
 >    pipeline until the second release.

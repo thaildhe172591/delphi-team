@@ -4,6 +4,19 @@ Updated: 2026-09-18 · **Phase 6 (Experience) — DONE.** Waiting on the owner t
 
 ## Where Phase 7 stands
 
+**Half released, 2026-09-18.** `v0.1.0` is tagged and pushed.
+
+- **PyPI: published.** 0.1.0 is live with six wheels and an sdist. Permanent; the number is spent.
+- **npm: not published.** The job failed with `EOTP` (C-023) and nothing reached the registry, so
+  0.1.0 is still free there. Fix is a granular token with **Bypass 2FA** enabled, then re-run the
+  failed job -- the versions stay in step.
+- **GitHub release: not created.** It needs the npm job, so it will run once npm does.
+
+Do not bump the version to get out of this. npm 0.1.0 is unclaimed, and a bump would put the two
+distributions permanently out of step for no reason.
+
+### Before this
+
 The release pipeline is built and **proved by running it**: `gh workflow run release.yml -f dry_run=true`
 is green end to end -- verify, 6 binaries, 6 wheels, sdist, SBOM -- with every publish job correctly
 skipped. Two defects were found that way and only that way (C-020, C-021).
