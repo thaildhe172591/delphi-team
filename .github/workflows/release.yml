@@ -230,13 +230,20 @@ jobs:
       - name: Publish
         working-directory: packages/cli
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Deliberately not `NODE_AUTH_TOKEN`. `setup-node` writes an .npmrc containing
+          # `_authToken=${NODE_AUTH_TOKEN}`, and an *empty* value there still counts as auth
+          # being configured — so npm would never reach for OIDC. That breaks at exactly the
+          # worst moment: the release after the token is deleted.
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          if [ -n "$NODE_AUTH_TOKEN" ]; then
-            echo "Publishing with a token. Configure trusted publishing on npmjs and remove NPM_TOKEN."
-            npm publish --provenance --access public --tag next
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "Publishing with a token. Configure trusted publishing on npmjs, then delete NPM_TOKEN."
+            NODE_AUTH_TOKEN="$NPM_TOKEN" npm publish --provenance --access public --tag next
           else
             echo "Publishing with trusted publishing (OIDC). Provenance is automatic."
+            # No auth line at all, so the CLI looks for an OIDC token instead of sending
+            # an empty one.
+            rm -f "$HOME/.npmrc"
             npm publish --access public --tag next
           fi
 
