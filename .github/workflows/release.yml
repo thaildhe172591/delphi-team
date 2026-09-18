@@ -147,7 +147,7 @@ jobs:
           output-file: dist-binaries/sbom.cdx.json
           upload-artifact: false
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: binaries
           path: dist-binaries/
@@ -206,7 +206,7 @@ jobs:
           python -m pip install --quiet dist-wheels/*.whl
           delphi --version
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheel-${{ matrix.target }}
           path: dist-wheels/
@@ -225,7 +225,7 @@ jobs:
         run: |
           python -m pip install --quiet build
           python -m build --sdist --outdir ../dist-wheels
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sdist
           path: dist-wheels/
