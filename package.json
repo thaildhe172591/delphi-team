@@ -7,7 +7,7 @@
   },
   "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "build": "pnpm build:templates && pnpm -r --filter \"./packages/**\" build",
+    "build": "pnpm build:templates && pnpm -r --filter \"./packages/**\" build && pnpm build:plugin",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
@@ -16,7 +16,8 @@
     "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/cli && tsc -p packages/vscode",
     "sync-version": "node scripts/sync-version.mjs",
     "check": "pnpm lint && pnpm build && pnpm typecheck && pnpm test",
-    "build:templates": "node scripts/build-templates.mjs"
+    "build:templates": "node scripts/build-templates.mjs",
+    "build:plugin": "node scripts/build-plugin.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",

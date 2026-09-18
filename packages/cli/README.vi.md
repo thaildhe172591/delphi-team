@@ -87,6 +87,17 @@ thay nó, im lặng.
 
 `delphi init` cài đúng sáu cái đó vào `.claude/skills/`, nên anh không cần cả hai.
 
+Hoặc cài như một plugin của Claude Code, cách này mang theo cả các seat chứ không chỉ skill:
+
+```
+/plugin marketplace add thaildhe172591/delphi-team
+/plugin install delphi-team@delphi-team
+```
+
+Plugin tự đặt namespace cho thứ nó cài, nên skill sẽ là `/delphi-team:delphi-resume`. Plugin
+mang theo role, skill và protocol; **ledger và mọi lệnh `delphi` vẫn đến từ CLI**, và hook nó
+cài sẽ không làm gì cho tới khi CLI nằm trên PATH.
+
 ---
 
 ## Năm phút đầu

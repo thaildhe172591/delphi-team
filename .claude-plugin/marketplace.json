@@ -1,0 +1,30 @@
+{
+  "name": "delphi-team",
+  "owner": {
+    "name": "thaildhe172591",
+    "url": "https://github.com/thaildhe172591"
+  },
+  "description": "Run Claude Code as a department: an orchestrator and specialist seats, each with its own role, memory and file scope.",
+  "plugins": [
+    {
+      "name": "delphi-team",
+      "source": "./plugin",
+      "description": "The seats and the skills that drive them. The ledger and every delphi command come from the CLI: `npm install -g delphi-team`.",
+      "version": "0.1.0",
+      "author": {
+        "name": "thaildhe172591",
+        "url": "https://github.com/thaildhe172591"
+      },
+      "homepage": "https://github.com/thaildhe172591/delphi-team",
+      "repository": "https://github.com/thaildhe172591/delphi-team",
+      "license": "MIT",
+      "keywords": [
+        "claude-code",
+        "agents",
+        "orchestration",
+        "roles"
+      ],
+      "category": "workflow"
+    }
+  ]
+}

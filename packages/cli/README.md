@@ -88,6 +88,18 @@ ran instead of it, silently.
 
 `delphi init` installs the same six into `.claude/skills/`, so you do not need both.
 
+Or as a Claude Code plugin, which brings the seats as well as the skills:
+
+```
+/plugin marketplace add thaildhe172591/delphi-team
+/plugin install delphi-team@delphi-team
+```
+
+A plugin namespaces what it installs, so its skills are `/delphi-team:delphi-resume` and so
+on. The plugin carries the roles, the skills and the protocol; **the ledger and every
+`delphi` command still come from the CLI**, and the hooks it installs do nothing until the
+CLI is on your PATH.
+
 ---
 
 ## Five minutes

@@ -79,15 +79,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+          cache: pnpm
       # One version across npm, PyPI, the plugin and the release
       # (docs/spec/PACKAGING_SPEC.md section 1).
       - run: node scripts/sync-version.mjs --check
       # The embedded template module is committed. A template edited without regenerating
       # it would ship the old text from every distribution, silently.
       - run: node scripts/build-templates.mjs --check
+      # The plugin is committed because `/plugin marketplace add` reads it out of this
+      # repository. A role edited without regenerating would ship the old text to anyone
+      # who installed the plugin, while the CLI shipped the new one.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: node scripts/build-plugin.mjs --check
 
   unicode-paths:
     name: paths with spaces and non-ASCII
