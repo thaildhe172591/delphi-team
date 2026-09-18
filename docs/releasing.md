@@ -27,6 +27,15 @@ order, before the first release.
 Without the reviewers these environments are decoration and the pipeline publishes on its own.
 **Adding the reviewer is the stop point.** Everything else here is plumbing.
 
+**Leave "Prevent self-review" off.** GitHub's own description of it is "require a different
+approver than the user who triggered the workflow run" — and on a one-person repository you are
+both. Turn it on and you push the tag, then cannot approve your own run: the deployment waits
+forever with nobody able to release it.
+
+"Allow administrators to bypass configured protection rules" pulls the other way: you are an
+administrator, so it makes the gate a reminder rather than a barrier. That is a reasonable escape
+hatch for a solo maintainer and a hole in a team. Decide which you are.
+
 ### 2. npm — trusted publishing
 
 Trusted publishing means no long-lived token in your repository. npm authenticates the workflow
@@ -45,10 +54,20 @@ Every field is **case-sensitive and must match exactly**. The workflow filename 
 renaming `release.yml` breaks publishing until npmjs is updated to match, which is why there is a
 note saying so at the top of that file.
 
-> **The first publish is the awkward one.** Trusted publishing is configured on a package that
-> exists, and yours does not yet. Either publish `0.1.0` once with a token — set `NPM_TOKEN` as a
-> repository secret, and the workflow uses it automatically — or reserve the name manually, then
-> configure trusted publishing and **delete the secret**. The workflow prints which path it took.
+> **The first publish is the awkward one, and npm is the awkward half.** Trusted publishing is
+> configured on a package that already exists, and yours does not. PyPI has no such problem — see
+> below — so this applies to npm alone.
+>
+> Two ways through it:
+>
+> 1. **A token, once.** Create a *granular* access token scoped to this package only, with
+>    read-and-write and a short expiry. Put it in the repository as the `NPM_TOKEN` secret; the
+>    workflow finds it and says which path it took. Publish, configure trusted publishing, then
+>    **delete the secret**. This is the one to prefer: the first release goes through the whole
+>    pipeline, so you find out whether the pipeline works while the stakes are a pre-alpha.
+> 2. **Publish by hand, once**, from your own npm login, then configure trusted publishing. No
+>    token ever exists — but the first version skips every gate, and you learn nothing about the
+>    pipeline until the second release.
 
 Requires npm 11.5.1 or later on Node 22.14 or later; `release.yml` pins the npm version rather than
 trusting the runner's.
@@ -65,8 +84,12 @@ new publisher → GitHub*:
 | Workflow | `release.yml` |
 | Environment | `pypi` on PyPI, `testpypi` on TestPyPI |
 
-For a project that does not exist yet, use **"pending publisher"** — PyPI supports configuring a
-trusted publisher before the first upload, which npm does not.
+For a project that does not exist yet, use **"pending publisher"**. PyPI supports configuring a
+trusted publisher *before* the first upload, which npm does not — so PyPI needs no token at any
+point, not even for the first release.
+
+Having published something else to PyPI before does not help here: trusted publishing is
+configured per project, not per account.
 
 ---
 
