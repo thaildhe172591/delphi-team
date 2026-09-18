@@ -99,6 +99,25 @@ The first is refused by the transition rule — from `ready` a task can only go 
 `backlog`, `blocked` or `cancelled`. The report rule bites one step later: a task in `review`
 cannot reach `done` without a report carrying the verify command's output.
 
+## 2b. Start from a ready-made department 🟢
+
+Three packs ship with delphi: `solo-dev`, `software-team`, `content-team`. A pack is a set of seats,
+their models, and what each one owns.
+
+```bash
+delphi pack list
+delphi pack show software-team          # what it is for, and what it would change here
+delphi pack apply software-team         # the diff — nothing is written
+delphi pack apply software-team --write
+delphi role build --all
+```
+
+`apply` prints a diff and stops, because `.delphi/config.yaml` is yours. Your comments and every
+setting the pack does not mention survive, and applying twice changes nothing the second time.
+
+Then edit `owns` for each seat. The packs guess at a layout, and that list of globs is what stops two
+seats being dispatched onto one file.
+
 ## 3. See what a dispatch would be, without dispatching 🟢
 
 ```bash
@@ -187,12 +206,17 @@ It starts nothing. `dept up` creates the seats; the extension shows them.
 ```bash
 delphi watch                  # board and live seats side by side
 delphi watch --follow         # redraws
+delphi watch --web            # the same view in a browser, on 127.0.0.1:4173
 delphi dept status --project shop
 delphi cost                   # sessions delphi started — not money; see C-009
 ```
 
 `dept status` tells you when a seat is stuck on a permission prompt, and how to reach it. That is
 the failure mode that wastes a whole shift otherwise.
+
+`--web` serves the board, the seats, every report and the assets. It is read-only — `GET` only, no
+endpoint writes — binds to 127.0.0.1, and checks the `Host` header, because a page in your browser
+can otherwise point a hostname it controls at localhost and read the lot.
 
 ---
 

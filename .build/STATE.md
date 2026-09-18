@@ -1,6 +1,6 @@
 # BUILD STATE
 
-Updated: 2026-09-18 · **Phase 5 (Automation) — DONE, run live, and the findings from that run closed.** Waiting on the owner to approve Phase 6.
+Updated: 2026-09-18 · **Phase 6 (Experience) — DONE.** Waiting on the owner to approve Phase 7, which is release and a mandatory stop point.
 
 ## Current phase
 Phases 0 to 3 complete. The repository is public, CI runs on every push, and delphi is set up on itself.
@@ -31,7 +31,7 @@ Node floor `>=22` since ADR-0009.
 ```
 packages/core       schemas · role composition · locked ledger · claude adapter ·
                     embedded templates · init planning · doctor checks
-packages/cli        32 commands, all with --json; the hook entry point; the MCP server
+packages/cli        34 commands, all with --json; the hook entry point; the MCP server; the web view
 packages/vscode     delphi-team-vscode: the board in the status bar, one editor terminal
                     per running seat, driven entirely by the ledger
 packages/templates  43 files: 15 roles, 8 capabilities, 5 teams, 6 skills,
@@ -43,7 +43,7 @@ scripts/            sync-version · build-binaries · build-templates
 ```
 
 ## Measured, not assumed
-- **370 tests pass**, and the CLI is installed from its own npm tarball rather than a link, so the published
+- **384 tests pass**, and the CLI is installed from its own npm tarball rather than a link, so the published
   artifact is what was exercised: 80 KB, four files, core bundled, dependencies resolve.
 - **A real department ran on a real project.** dev-be took a story from `ready` to `review` with `npm test`
   green, filed a report, handed over. The orchestrator drove it from a `claude` session and reported two
@@ -122,13 +122,13 @@ Each has a test now.
 None.
 
 ## Next step
-**Phase 6 — surface and docs**, pending approval: `watch --web`, the docs site, the three packs
-(software-team, solo-dev, content-team), the contribution guide, and `docs/traceability.md` mapping
-R01-R25 to where each requirement is met.
+**Phase 7 — release**, pending approval, per PACKAGING_SPEC section 6. Publishing is a mandatory stop
+point: nothing goes to npm or PyPI without the owner saying so. `packages/cli` still has no README,
+which is the one thing that must be written before it does.
 
 ## Quick verification commands
 ```bash
-pnpm check                      # lint, build, typecheck, 370 tests
+pnpm check                      # lint, build, typecheck, 384 tests
 node scripts/loop-lab.mjs       # the loop end to end, for free
 node packages/cli/dist/index.js doctor
 ```

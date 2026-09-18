@@ -5,6 +5,9 @@ backend, frontend, DB, QA, tester, reviewer — each with its own role, its own 
 
 > Unofficial. Works with Claude Code; not affiliated with or endorsed by Anthropic.
 
+> **Documentation:** [docs/](docs/) — [trying it](docs/try-it.md) · [example departments](examples/README.md) ·
+> [writing a role](docs/writing-a-role.md) · [traceability](docs/traceability.md)
+
 > **Status: pre-alpha, not published.** Phases 0-5 of the build are done: 32 commands, the ledger, the
 > seats and teams, dispatch and surfaces, the automation loop, an MCP server and a VS Code companion.
 > Nothing is on npm or PyPI yet. [`docs/try-it.md`](docs/try-it.md) walks through running it from source,

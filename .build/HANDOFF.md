@@ -54,7 +54,7 @@ From BUILD_PROMPT and the owner, in force for every session:
 
 ## 4. Where the build is
 
-**Phases 0–5 done. Phase 6 needs the owner's approval before it starts.**
+**Phases 0–6 done. Phase 7 is release, and publishing is a mandatory stop point.**
 
 ```
 Phase 0  verification spikes            done
@@ -62,14 +62,13 @@ Phase 1  repository, CI, packaging      done
 Phase 2  core, templates, CLI, hooks    done
 Phase 3  dispatch, surfaces, teams      done
 Phase 4  advanced management            done
-Phase 5  loop, MCP server, VS Code ext  done   <- you are here
-Phase 6  watch --web, docs, packs       NOT STARTED, needs approval
+Phase 5  loop, MCP server, VS Code ext  done
+Phase 6  watch --web, docs, packs       done   <- you are here
 Phase 7  release                        NOT STARTED, publish = stop point
 ```
 
-Phase 6 scope, as agreed: `watch --web`, the docs site, three packs (software-team, solo-dev,
-content-team), the contribution guide, and `docs/traceability.md` mapping R01–R25 to where each
-requirement is met.
+Phase 7 is PACKAGING_SPEC section 6: the npm and PyPI release. Nothing is published without the
+owner saying so, in this conversation, for that specific publish.
 
 ### Carried debt
 
@@ -183,7 +182,7 @@ Phase 2c alone came from execution, not review. Do not mark work done on a readi
 ## 7. How to prove the thing works
 
 ```bash
-pnpm check                      # lint, build, typecheck, 370 tests
+pnpm check                      # lint, build, typecheck, 384 tests
 node scripts/loop-lab.mjs       # the loop end to end, for free
 node packages/cli/dist/index.js doctor
 ```
