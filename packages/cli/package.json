@@ -1,6 +1,6 @@
 {
   "name": "delphi-team",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Run Claude Code as a department: an orchestrator plus specialist seats, each with its own role, memory and scope. Unofficial; works with Claude Code.",
   "license": "MIT",
   "type": "module",
