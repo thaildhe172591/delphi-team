@@ -12,9 +12,13 @@
  * The generated file is committed, and CI fails when it is stale — the same guarantee
  * PACKAGING_SPEC asks for around the generated plugin.
  *
+ * It also mirrors the skills to a top-level `skills/` directory, because that is where
+ * `npx skills add <owner>/<repo>` looks (vercel-labs/skills). Generating it from the same
+ * source is the only way the two cannot drift: an edit to one without the other fails CI.
+ *
  * Usage: node scripts/build-templates.mjs [--check]
  */
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, posix, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -54,7 +58,41 @@ ${entries.join('\n')}
 })
 `
 
+/**
+ * The skills, mirrored where `npx skills` looks for them.
+ *
+ * That CLI installs into Claude Code, Codex, Cursor and 75 other agents, and lets the user
+ * choose project or global scope — none of which delphi has to implement, as long as the
+ * files are where it expects. Returns the files it would write, so `--check` can compare
+ * without touching the disk.
+ */
+function mirroredSkills() {
+  const out = new Map()
+  for (const file of files) {
+    const key = relative(source, file).split(sep).join(posix.sep)
+    if (!key.startsWith('skills/')) continue
+    out.set(join(root, key), readFileSync(file, 'utf8').replace(/\r\n/g, '\n'))
+  }
+  return out
+}
+
+const skills = mirroredSkills()
+
 if (check) {
+  for (const [path, content] of skills) {
+    let current = ''
+    try {
+      current = readFileSync(path, 'utf8').replace(/\r\n/g, '\n')
+    } catch {
+      console.error(`build-templates: ${relative(root, path)} is missing. Run: pnpm build:templates`)
+      process.exit(1)
+    }
+    if (current !== content) {
+      console.error(`build-templates: ${relative(root, path)} is stale. Run: pnpm build:templates`)
+      process.exit(1)
+    }
+  }
+
   let current = ''
   try {
     current = readFileSync(target, 'utf8').replace(/\r\n/g, '\n')
@@ -69,6 +107,17 @@ if (check) {
   console.log(`build-templates: up to date (${files.length} templates)`)
 } else {
   writeFileSync(target, generated)
+
+  // Rewritten wholesale so a renamed or removed skill does not linger in the mirror.
+  rmSync(join(root, 'skills'), { recursive: true, force: true })
+  for (const [path, content] of skills) {
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, content)
+  }
+
   const bytes = generated.length
-  console.log(`build-templates: embedded ${files.length} templates (${Math.round(bytes / 1024)} KB)`)
+  console.log(
+    `build-templates: embedded ${files.length} templates (${Math.round(bytes / 1024)} KB), ` +
+      `mirrored ${skills.size} skills to skills/`,
+  )
 }
