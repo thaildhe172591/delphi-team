@@ -95,8 +95,14 @@ Or as a Claude Code plugin, which brings the seats as well as the skills:
 /plugin install delphi-team@delphi-team
 ```
 
-A plugin namespaces what it installs, so its skills are `/delphi-team:delphi-resume` and so
-on. The plugin carries the roles, the skills and the protocol; **the ledger and every
+In Codex it is the same shape, reading the portable manifest rather than the Claude one:
+
+```
+codex plugin marketplace add thaildhe172591/delphi-team
+```
+
+A plugin namespaces what it installs, so in Claude Code its skills are
+`/delphi-team:delphi-resume` and so on. The plugin carries the roles, the skills and the protocol; **the ledger and every
 `delphi` command still come from the CLI**, and the hooks it installs do nothing until the
 CLI is on your PATH.
 

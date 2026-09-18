@@ -65,7 +65,28 @@ const files = new Map()
 for (const file of plugin.files) {
   files.set(join(out, file.path), file.content)
 }
+/**
+ * The same marketplace, in the portable shape.
+ *
+ * Codex and ChatGPT read `.agents/plugins/marketplace.json` and accept the `.claude-plugin`
+ * path as legacy. Writing both means neither harness is reading a file shaped for the other,
+ * and the entry that differs is small: a `source` object, an installation policy, a category.
+ */
+const portableMarketplace = {
+  name: 'delphi-team',
+  interface: { displayName: 'delphi-team' },
+  plugins: [
+    {
+      name: 'delphi-team',
+      source: { source: 'local', path: './plugin' },
+      policy: { installation: 'AVAILABLE', authentication: 'ON_INSTALL' },
+      category: 'Productivity',
+    },
+  ],
+}
+
 files.set(join(root, '.claude-plugin/marketplace.json'), `${JSON.stringify(marketplace, null, 2)}\n`)
+files.set(join(root, '.agents/plugins/marketplace.json'), `${JSON.stringify(portableMarketplace, null, 2)}\n`)
 
 /** Every file under `dir`, so a leftover from a rename is noticed rather than ignored. */
 function walk(dir) {

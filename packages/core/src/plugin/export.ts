@@ -39,15 +39,29 @@ export function buildPlugin(options: PluginOptions): PluginExport {
   const cliCommand = options.cliCommand ?? 'delphi'
   const files: PluginFile[] = []
 
+  const description =
+    options.description ??
+    'Run Claude Code as a department: roles, a shared protocol, and the skills that drive them.'
+
   files.push({
     path: '.claude-plugin/plugin.json',
+    content: `${JSON.stringify({ name, description, version: options.version }, null, 2)}\n`,
+  })
+
+  // The same plugin, declared the portable way as well. Codex and ChatGPT read an Agent
+  // Plugins manifest at the plugin root; Claude Code reads the one above. Both find their
+  // skills in `skills/`, so one directory serves both and the only duplication is a
+  // manifest of six lines.
+  files.push({
+    path: 'plugin.json',
     content: `${JSON.stringify(
       {
+        $schema: 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json',
         name,
-        description:
-          options.description ??
-          'Run Claude Code as a department: roles, a shared protocol, and the skills that drive them.',
         version: options.version,
+        description,
+        license: 'MIT',
+        keywords: ['claude-code', 'codex', 'agents', 'orchestration', 'roles'],
       },
       null,
       2,

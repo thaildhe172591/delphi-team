@@ -94,7 +94,14 @@ Hoặc cài như một plugin của Claude Code, cách này mang theo cả các 
 /plugin install delphi-team@delphi-team
 ```
 
-Plugin tự đặt namespace cho thứ nó cài, nên skill sẽ là `/delphi-team:delphi-resume`. Plugin
+Trên Codex cũng cùng hình dạng, chỉ khác là nó đọc manifest portable thay vì bản của Claude:
+
+```
+codex plugin marketplace add thaildhe172591/delphi-team
+```
+
+Plugin tự đặt namespace cho thứ nó cài, nên trong Claude Code skill sẽ là
+`/delphi-team:delphi-resume`. Plugin
 mang theo role, skill và protocol; **ledger và mọi lệnh `delphi` vẫn đến từ CLI**, và hook nó
 cài sẽ không làm gì cho tới khi CLI nằm trên PATH.
 

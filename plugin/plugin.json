@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "delphi-team",
+  "version": "0.1.0",
+  "description": "Run Claude Code as a department: roles, a shared protocol, and the skills that drive them.",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "agents",
+    "orchestration",
+    "roles"
+  ]
+}
