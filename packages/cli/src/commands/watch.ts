@@ -10,6 +10,7 @@ import {
 import { Command } from 'commander'
 import { type Context, requireInitialised, resolveProject } from '../context.js'
 import { columns, createReporter, plural } from '../output.js'
+import { seatState } from './dept.js'
 
 /**
  * A read-only view of the department.
@@ -40,8 +41,8 @@ async function snapshot(context: Context, slug: string): Promise<Snapshot> {
   // What delphi started, so a running session can be named by its seat rather than its id.
   const dispatched = new Map<string, { seat: string; task: string }>()
   for (const line of (await readOr(paths.sessions, '')).split('\n').filter(Boolean)) {
-    const [, seat, , , name, , , task] = line.split(' | ').map((p) => p.trim())
-    if (name && seat) dispatched.set(name, { seat, task: task ?? '-' })
+    const [, seat, , id, , , , task] = line.split(' | ').map((p) => p.trim())
+    if (id && seat) dispatched.set(id, { seat, task: task ?? '-' })
   }
 
   let agents: ClaudeAgentEntry[] | null = null
@@ -56,20 +57,13 @@ async function snapshot(context: Context, slug: string): Promise<Snapshot> {
   // marked blocked — which reads as "your department is stuck" when nothing of the sort
   // is true. A session delphi did not start is not a seat.
   const seats = (agents ?? [])
-    .filter((entry) => entry.kind === 'background' && entry.name !== undefined)
-    .filter((entry) => dispatched.has(entry.name as string))
+    .filter((entry) => entry.kind === 'background' && entry.id !== undefined)
+    .filter((entry) => dispatched.has(entry.id as string))
     .map((entry) => {
-      const record = dispatched.get(entry.name as string)
+      const record = dispatched.get(entry.id as string)
       return {
         seat: record?.seat ?? (entry.name as string),
-        // `blocked` is Claude Code's word for a session idle after its turn. Printing it
-        // as blocked next to a board that says nothing is blocked is a contradiction the
-        // reader has to resolve, and they resolve it by distrusting the view.
-        state: entry.waitingFor
-          ? 'waiting'
-          : entry.state === 'working' || entry.status === 'busy'
-            ? 'working'
-            : (entry.status ?? entry.state ?? '-'),
+        state: seatState(entry),
         waitingFor: entry.waitingFor ?? null,
         task: record?.task ?? '-',
       }

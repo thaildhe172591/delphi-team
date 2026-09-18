@@ -16,6 +16,7 @@ import {
 } from '@delphi-team/core'
 import { Command } from 'commander'
 import { execa } from 'execa'
+import { confirmDispatch, reportConfirmation } from '../confirm.js'
 import { requireInitialised, resolveProject, UserError } from '../context.js'
 import { createReporter } from '../output.js'
 import { openPanes, reportSurface } from '../surface.js'
@@ -134,6 +135,7 @@ export function dispatchCommand(): Command {
     .option('--effort <effort>')
     .option('--surface <surface>', 'auto | wt | tmux | vscode | desktop | none')
     .option('--force', 'dispatch even though a pre-flight check blocks it')
+    .option('-y, --yes', 'do not ask before starting the seat')
     .option('--project <slug>')
     .option('--dry-run', 'print the prompt and the command, start nothing')
     .option('--json', 'machine-readable output')
@@ -190,6 +192,17 @@ Or pass --force if you have already decided this is fine.`,
         })
         return
       }
+
+      const confirmation = await confirmDispatch(
+        context,
+        `About to start @${seat} on ${id} (${model ?? 'default model'}).`,
+        { yes: options.yes },
+      )
+      if (!confirmation.approved) {
+        report.line('Nothing started.')
+        return
+      }
+      reportConfirmation(report, confirmation)
 
       const adapter = new ClaudeAdapter({ cwd: context.root })
       const { id: sessionId } = await adapter.dispatch({

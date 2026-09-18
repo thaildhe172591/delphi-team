@@ -26,6 +26,7 @@ import {
 import { Command } from 'commander'
 import { execa } from 'execa'
 import matter from 'gray-matter'
+import { confirmDispatch, reportConfirmation } from '../confirm.js'
 import { type Context, requireInitialised, resolveProject, UserError } from '../context.js'
 import { columns, createReporter, plural } from '../output.js'
 import { claudeBinary, openPanes, reportSurface, surfaceFor } from '../surface.js'
@@ -92,12 +93,14 @@ function isWorking(entry: ClaudeAgentEntry): boolean {
 }
 
 /** How a seat is doing, in a word a person can act on. */
-function seatState(entry: ClaudeAgentEntry): string {
-  // `blocked` is what Claude Code calls a session sitting idle after its turn, and reading
-  // it as trouble is exactly the wrong conclusion. Say what it is.
+export function seatState(entry: ClaudeAgentEntry): string {
+  // `blocked` is Claude Code's word for a session that has finished its turn and is waiting
+  // for a message. Printed next to a board saying nothing is blocked, it is a contradiction
+  // the reader resolves by distrusting the view. `status` is often absent entirely, so the
+  // field that decides is `waitingFor`: that, and only that, is a seat wanting a person.
   if (entry.waitingFor) return 'waiting'
   if (isWorking(entry)) return 'working'
-  if (entry.status === 'idle') return 'idle'
+  if (entry.state === 'blocked' || entry.status === 'idle') return 'idle'
   return entry.state ?? entry.status ?? '-'
 }
 
@@ -109,16 +112,17 @@ async function liveSeats(context: Context, slug: string) {
   >()
   const log = await readOr(context.paths.project(slug).sessions, '')
 
+  // Keyed by session id, not by name. One seat can have two sessions on two stories, and
+  // keying by name gave both rows whichever task happened to be logged last.
   for (const line of log.split('\n').filter(Boolean)) {
     const [, seat, mode, id, name, model, , task] = line.split(' | ').map((p) => p.trim())
-    if (!seat) continue
-    dispatched.set(name ?? seat, {
+    if (!seat || !id) continue
+    dispatched.set(id, {
       seat,
       mode: mode ?? '',
       name: name ?? seat,
       model: model ?? '-',
       task: task ?? '-',
-      ...(id ? {} : {}),
     })
   }
 
@@ -144,6 +148,7 @@ export function deptCommand(): Command {
     .option('--surface <surface>', 'wt | tmux | desktop | none — split a terminal to watch the seats')
     .option('--project <slug>')
     .option('--dry-run', 'show the plan and start nothing')
+    .option('-y, --yes', 'do not ask before starting seats')
     .option('--json', 'machine-readable output')
     .action(async (options) => {
       const report = createReporter(Boolean(options.json))
@@ -311,6 +316,18 @@ export function deptCommand(): Command {
         return
       }
 
+      const confirmation = await confirmDispatch(
+        context,
+        `About to start ${plural(plan.active.length, 'seat')} on ${slug}: ` +
+          plan.active.map((seatPlan) => seatPlan.seat).join(', '),
+        { yes: options.yes },
+      )
+      if (!confirmation.approved) {
+        report.line('Nothing started.')
+        return
+      }
+      reportConfirmation(report, confirmation)
+
       // sessions mode: start each seat as a background session.
       const adapter = new ClaudeAdapter({ cwd: context.root })
       const started: Array<{ seat: string; id: string; name: string; task: string }> = []
@@ -402,10 +419,10 @@ export function deptCommand(): Command {
       // an unrelated one showed up named after itself and marked blocked, which reads as
       // a department in trouble when nothing of the sort is true.
       const live = (agents ?? []).filter(
-        (a) => a.kind === 'background' && a.name !== undefined && dispatched.has(a.name),
+        (a) => a.kind === 'background' && a.id !== undefined && dispatched.has(a.id),
       )
       const rows = live.map((entry) => {
-        const record = dispatched.get(entry.name as string)
+        const record = dispatched.get(entry.id as string)
         return {
           seat: record?.seat ?? (entry.name as string),
           name: entry.name ?? '-',
@@ -475,9 +492,9 @@ export function deptCommand(): Command {
       const stopped: string[] = []
       for (const entry of agents) {
         if (entry.kind !== 'background' || !entry.id || !entry.name) continue
-        if (!dispatched.has(entry.name)) continue
+        if (!dispatched.has(entry.id)) continue
         await adapter.stop(entry.id)
-        stopped.push(`${dispatched.get(entry.name)?.seat ?? entry.name} (${entry.id})`)
+        stopped.push(`${dispatched.get(entry.id)?.seat ?? entry.name} (${entry.id})`)
       }
 
       await appendJournal(context.paths.project(slug).journal, {
