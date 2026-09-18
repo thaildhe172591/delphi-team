@@ -1,0 +1,45 @@
+name: content-team
+title: Content team
+description: Research, write, edit. A department for work whose output is prose rather than code.
+when: >
+  Documentation, a handbook, a course, a report someone will be held to. The same problem as
+  software — one person holding every draft in their head — with a different deliverable.
+seats_added: [researcher, tech-writer, editor]
+default_team: content
+
+config:
+  defaults:
+    team: content
+    track: standard
+  dispatch:
+    max_active: 3
+    hard_limit: 4
+  models:
+    orchestrator: { model: opus, effort: high }
+    researcher: { model: opus, effort: xhigh }
+    tech-writer: { model: opus, effort: xhigh }
+    editor: { model: opus, effort: high }
+  seats:
+    researcher:
+      base: researcher
+      owns: ["research/**", "docs/sources/**"]
+      description: "Finds what is true, and records where each claim came from."
+    tech-writer:
+      base: tech-writer
+      owns: ["docs/**"]
+      description: "Writes from the reader's problem, and runs every example."
+    editor:
+      base: editor
+      owns: []
+      description: "Reads the draft against the brief and the sources. Owns no file; comments on all."
+  safety:
+    db_default: read-only
+
+notes:
+  - "The editor owns no files on purpose. Its job is to read and object, and a seat that can
+     rewrite the draft stops reviewing it and starts writing it."
+  - "`research/` is where sources live. The point of a separate researcher seat is that the
+     claim and its source are recorded before the writer turns them into a sentence."
+  - "The board rules are unchanged: a chapter is a story, done needs acceptance criteria you
+     could check, and `verify` is how you check them — a link that resolves, an example that
+     runs, a number that matches the source."

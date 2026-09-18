@@ -123,6 +123,7 @@ export {
   fitsInPreload,
   type MemoryLimits,
 } from './memory/compact.js'
+export { type ConfigChange, type ConfigMerge, mergeConfigInto } from './packs/apply.js'
 export { buildPlugin, type PluginExport, type PluginFile, type PluginOptions } from './plugin/export.js'
 export {
   type BuildRoleInput,

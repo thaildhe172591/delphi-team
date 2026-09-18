@@ -24,6 +24,7 @@ import {
 } from './commands/ledger.js'
 import { loopCommand } from './commands/loop.js'
 import { mcpCommand } from './commands/mcp.js'
+import { packCommand } from './commands/pack.js'
 import { capabilityCommand, roleCommand, teamCommand } from './commands/roles.js'
 import { dispatchCommand, seatCommand, snapCommand, startCommand } from './commands/session.js'
 import { watchCommand } from './commands/watch.js'
@@ -49,6 +50,7 @@ export function createProgram(version: string = __DELPHI_VERSION__): Command {
   program.addCommand(roleCommand())
   program.addCommand(capabilityCommand())
   program.addCommand(teamCommand())
+  program.addCommand(packCommand())
 
   program.addCommand(projectCommand())
   program.addCommand(resumeCommand())

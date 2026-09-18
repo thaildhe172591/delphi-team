@@ -189,8 +189,14 @@ export function roleCommand(): Command {
       const report = createReporter(Boolean(options.json))
       const context = await requireInitialised()
 
+      // `--all` means every seat this project has, which is the ones already built *and*
+      // the ones the config names. Only rebuilding what exists meant a pack could add three
+      // seats to the config and `role build --all` would build none of them.
+      const built = (await readdir(context.paths.agents).catch(() => []))
+        .filter((file) => file.endsWith('.md'))
+        .map((file) => file.slice(0, -3))
       const seats = options.all
-        ? (await readdir(context.paths.agents)).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3))
+        ? [...new Set([...built, ...Object.keys(context.config.seats ?? {})])].sort()
         : seat
           ? [seat]
           : []
