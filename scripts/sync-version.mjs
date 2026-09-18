@@ -27,9 +27,17 @@ const targets = [
   // this same number, so leaving them behind fails `build-plugin --check` -- which is what a
   // version pull request did, because this script only claimed to cover the plugin (C-025).
   // Patching the line is enough, and it means bumping a version needs no build.
-  { file: 'plugin/.claude-plugin/plugin.json', pattern: /"version": ".*"/, replacement: `"version": "${version}"` },
+  {
+    file: 'plugin/.claude-plugin/plugin.json',
+    pattern: /"version": ".*"/,
+    replacement: `"version": "${version}"`,
+  },
   { file: 'plugin/plugin.json', pattern: /"version": ".*"/, replacement: `"version": "${version}"` },
-  { file: '.claude-plugin/marketplace.json', pattern: /"version": ".*"/, replacement: `"version": "${version}"` },
+  {
+    file: '.claude-plugin/marketplace.json',
+    pattern: /"version": ".*"/,
+    replacement: `"version": "${version}"`,
+  },
 ]
 
 let drifted = 0
