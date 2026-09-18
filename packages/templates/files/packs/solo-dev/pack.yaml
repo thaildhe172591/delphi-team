@@ -1,0 +1,31 @@
+name: solo-dev
+title: Solo developer
+description: One person and a small department. Two seats that work, one that reviews.
+when: >
+  You are the whole team. You want the story written down and the work reviewed by someone
+  who did not do it, without paying for a planning department to decide what you already know.
+seats_added: [dev-be, reviewer]
+default_team: quick-fix
+
+# Merged into .delphi/config.yaml. Everything not listed here is left alone.
+config:
+  defaults:
+    team: quick-fix
+    track: quick
+  dispatch:
+    max_active: 2
+    hard_limit: 3
+  models:
+    orchestrator: { model: sonnet, effort: high }
+    dev-be: { model: opus, effort: xhigh }
+    reviewer: { model: sonnet, effort: high }
+  budget:
+    warn_parallel_sessions: 2
+
+notes:
+  - The orchestrator runs on sonnet here. On a department of two there is little to plan and
+    the money is better spent on the seat writing the code.
+  - dev-be is the only seat that writes. Point its `owns` at your source directory if you
+    later add a second developer, so the two cannot collide.
+  - Two active seats, not five. A solo project rarely has two independent stories ready at
+    once, and starting one anyway is how a story gets dispatched onto a file someone owns.

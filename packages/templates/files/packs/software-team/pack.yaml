@@ -1,0 +1,50 @@
+name: software-team
+title: Software team
+description: The full department — requirements, architecture, two developers, database, QA, testing, review.
+when: >
+  Work that outlives one story: a product with a roadmap, a schema that changes, and someone
+  who will ask in six months why it was built this way. The cost is real — every seat is a
+  session — so use it when the coordination is the hard part, not the typing.
+seats_added: [ba, pm, techlead, dev-be, dev-fe, db-engineer, qa, tester, reviewer]
+default_team: project
+
+config:
+  defaults:
+    team: project
+    track: standard
+  dispatch:
+    max_active: 4
+    hard_limit: 8
+  models:
+    orchestrator: { model: opus, effort: high }
+    ba: { model: opus, effort: xhigh }
+    pm: { model: sonnet, effort: high }
+    techlead: { model: opus, effort: xhigh }
+    dev-be: { model: opus, effort: xhigh }
+    dev-fe: { model: opus, effort: xhigh }
+    db-engineer: { model: opus, effort: xhigh }
+    qa: { model: sonnet, effort: high }
+    tester: { model: sonnet, effort: high }
+    reviewer: { model: opus, effort: high }
+  seats:
+    dev-be:
+      base: dev-be
+      owns: ["src/api/**", "src/server/**"]
+      description: "Backend: APIs, services and the business logic behind them."
+    dev-fe:
+      base: dev-fe
+      owns: ["src/web/**", "src/components/**"]
+      description: "Frontend: the screens, their state, and the contract they call."
+    db-engineer:
+      base: db-engineer
+      owns: ["db/**", "migrations/**"]
+      description: "The data model, migrations and query performance. Read-only by default."
+
+notes:
+  - The `owns` globs are the point of this pack, and the part to edit first. They are what
+    stops two developers being dispatched onto one file, and the defaults here are a guess
+    at your layout rather than knowledge of it.
+  - Four active seats, not eight. Past four, the department spends the shift coordinating.
+    The hard limit is there for the rare shift that genuinely needs it.
+  - pm, qa and tester run on sonnet. They read and decide more than they write, and the
+    difference is most of the bill.

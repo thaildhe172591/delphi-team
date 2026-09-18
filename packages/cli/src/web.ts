@@ -11,8 +11,11 @@ import type { Context } from './context.js'
  * second way to change them, and the ledger already has one. So this serves `GET` and
  * nothing else, and there is no endpoint that writes. The board is changed with `delphi`.
  *
- * It binds to 127.0.0.1. A department's board names its people, its blockers and the paths
- * it is working in; none of that belongs on an interface anyone else can reach.
+ * It binds to 127.0.0.1 *and* checks the `Host` header. The bind alone is not enough: a page
+ * in your browser can point a hostname it controls at 127.0.0.1 and reach this server from
+ * its own origin, because the browser is the thing on this machine. The header is what it
+ * cannot forge. A department's board names its people, its blockers, the paths it is working
+ * in and the text of every report; none of that belongs to a page you happened to open.
  *
  * No framework and no build step. The page is a string in this file, it polls one JSON
  * endpoint, and the whole thing ships inside a 90 KB CLI.
@@ -36,6 +39,30 @@ const TYPES: Record<string, string> = {
 }
 
 /**
+ * Is the `Host` header one this server is actually reachable at?
+ *
+ * Binding to 127.0.0.1 is not the whole defence, which is the mistake this closes. Any page
+ * in the user's browser can point a hostname it controls at 127.0.0.1 and then send
+ * requests here from its own origin — the browser is on this machine, so the bind address
+ * is satisfied. What the attacker cannot forge is the `Host` header: a rebound request
+ * carries their hostname, not ours.
+ *
+ * The ledger names people, their blockers, the paths they work in and the text of every
+ * report, so this is worth a header check.
+ */
+export function isLocalHost(host: string | undefined, port: number): boolean {
+  if (!host) return false
+  const allowed = new Set([
+    `127.0.0.1:${port}`,
+    `localhost:${port}`,
+    `[::1]:${port}`,
+    // A request with no port is possible when the default one is in use.
+    ...(port === 80 ? ['127.0.0.1', 'localhost', '[::1]'] : []),
+  ])
+  return allowed.has(host.toLowerCase())
+}
+
+/**
  * Is this path really inside that directory?
  *
  * `..` in a query string is the oldest trick there is, and the answer has to survive
@@ -53,6 +80,12 @@ export function startWebWatch(context: Context, slug: string, options: WebOption
     // Everything here reads. Nothing here writes. That is the contract, and refusing any
     // other method is the cheapest way to keep it true.
     if (request.method !== 'GET') return send(response, 405, 'text/plain', 'read-only')
+
+    // Before anything is read: a request that did not arrive at a name this server answers
+    // to came through someone else's hostname, and the only way that happens is rebinding.
+    if (!isLocalHost(request.headers.host, options.port)) {
+      return send(response, 403, 'text/plain', 'this server answers to localhost only')
+    }
 
     const url = new URL(request.url ?? '/', 'http://127.0.0.1')
     options.log?.(`${request.method} ${url.pathname}`)
