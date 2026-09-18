@@ -37,12 +37,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # v2 renamed these inputs: `version` -> `version-script`, `commit` -> `commit-message`,
+      # `title` -> `pr-title`. It fails loudly rather than ignoring the old names, which is
+      # how a Dependabot major bump was caught the same afternoon it landed.
       - uses: changesets/action@v2
         with:
           # One version across npm, PyPI, the plugin manifest and the GitHub release. Doing
           # it here rather than by hand is what stops them drifting apart between releases.
-          version: pnpm changeset version && pnpm sync-version
-          title: 'chore: version packages'
-          commit: 'chore: version packages'
+          version-script: pnpm changeset version && pnpm sync-version
+          pr-title: 'chore: version packages'
+          commit-message: 'chore: version packages'
+          # This workflow opens a pull request and does nothing else. No `publish` script, so
+          # nothing is published; and neither of these, so it cannot tag or release either —
+          # a tag from here would start the publish pipeline without anyone asking for it.
+          create-github-releases: false
+          push-git-tags: false
         env:
           GITHUB_TOKEN: ${{ github.token }}
