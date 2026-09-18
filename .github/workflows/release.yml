@@ -4,14 +4,20 @@ name: Release
 # approve: each publish job names a GitHub environment, and those environments carry
 # required reviewers. A tag starts the pipeline; it does not finish it.
 #
-# The order follows PACKAGING_SPEC section 6 -- verify, build, npm, TestPyPI, PyPI, GitHub
-# release -- with one amendment (C-020): npm goes to the *stage queue* rather than to the
-# `next` tag, and you promote it on npmjs with 2FA instead of a second job moving a dist-tag.
-# OIDC signs `npm publish` and `npm stage publish` and nothing else, so the dist-tag the spec
-# describes would have required a permanent token in this repository -- the exact thing
-# trusted publishing exists to remove. The first release is the one exception: npm cannot
-# stage a package that does not exist yet, so it publishes directly with a short-lived token
-# and every release after it is staged.
+# The order follows PACKAGING_SPEC section 6 -- verify, build, npm, PyPI, GitHub release --
+# with two amendments to it.
+#
+# C-020: npm goes to the *stage queue* rather than to the `next` tag, and you promote it on
+# npmjs with 2FA instead of a second job moving a dist-tag. OIDC signs `npm publish` and
+# `npm stage publish` and nothing else, so the dist-tag the spec describes would have
+# required a permanent token in this repository -- the exact thing trusted publishing exists
+# to remove. The first release is the one exception: npm cannot stage a package that does not
+# exist yet, so it publishes directly with a short-lived token and every release after it is
+# staged.
+#
+# C-022: there is no TestPyPI stage, by the owner's decision. What it guarded -- a broken
+# wheel becoming permanent -- is checked before the gate instead: `twine check` on every
+# distribution, and the wheels job runs the wheel it just built.
 #
 # Anything that can be checked is checked before anything is published.
 #
@@ -186,6 +192,20 @@ jobs:
           python -m pip install --quiet build
           python -m build --wheel --outdir ../dist-wheels
 
+      # Does the wheel actually run? `twine check` reads metadata and never executes
+      # anything, and with no TestPyPI stage (C-022) this is the last chance to find out
+      # before a version number is spent forever. It guards the failure that already
+      # happened once: a binary that is present but not runnable (C-021).
+      #
+      # Only the runner's own platform can be tried, so this covers one wheel of six. The
+      # other five share every build step with it, so what it really proves is that the
+      # recipe produces something that runs.
+      - name: The wheel runs
+        if: matrix.target == 'bun-linux-x64'
+        run: |
+          python -m pip install --quiet dist-wheels/*.whl
+          delphi --version
+
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.target }}
@@ -265,32 +285,16 @@ jobs:
             echo "::notice::Staged. Nobody can install it yet. Approve it with 'npm stage approve' or on npmjs -- either way you are challenged for 2FA."
           fi
 
-  testpypi:
-    name: TestPyPI
-    needs: [wheels, sdist]
-    if: github.event_name == 'push' || !inputs.dry_run
-    runs-on: ubuntu-latest
-    environment: testpypi
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          pattern: '{wheel-*,sdist}'
-          merge-multiple: true
-          path: dist
-      - run: ls -la dist
-
-      # TestPyPI before PyPI, so a broken wheel is found somewhere it can be deleted.
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          skip-existing: true
-
+  # There is no TestPyPI stage (C-022, the owner's call). That removes the only place a
+  # broken wheel could have been found without spending a version number, so what it was
+  # guarding is checked before the gate instead: the action runs `twine check` on every
+  # distribution, and the wheels job runs the wheel it just built.
   pypi:
     name: PyPI
-    needs: testpypi
+    needs: [wheels, sdist]
+    # Without this the job would publish during a dry run. It used to inherit the skip from
+    # `needs: testpypi`; deleting that job deleted the guard with it.
+    if: github.event_name == 'push' || !inputs.dry_run
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
@@ -302,6 +306,7 @@ jobs:
           pattern: '{wheel-*,sdist}'
           merge-multiple: true
           path: dist
+      - run: ls -la dist
       - uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:

@@ -15,16 +15,15 @@ order, before the first release.
 
 ### 1. GitHub environments — the approval gates
 
-`Settings → Environments`. Create four, and give **each** one a required reviewer (you):
+`Settings → Environments`. Create two, and give **each** one a required reviewer (you):
 
 | Environment | Gates |
 |---|---|
-| `npm-stage` | uploading to npm's stage queue |
-| `testpypi` | publishing to TestPyPI |
+| `npm-stage` | publishing to npm |
 | `pypi` | publishing to PyPI |
 
-> If you created an `npm-next` and an `npm-latest` environment earlier, rename `npm-next` to
-> `npm-stage` and delete `npm-latest`. npm releases are promoted on npmjs now, not by a job.
+> Earlier drafts also had `npm-next`, `npm-latest` and `testpypi`. All three are gone: npm is
+> promoted on npmjs rather than by a job, and there is no TestPyPI stage.
 
 Without the reviewers these environments are decoration and the pipeline publishes on its own.
 **Adding the reviewer is the stop point.** Everything else here is plumbing.
@@ -87,17 +86,16 @@ note saying so at the top of that file.
 Requires npm 11.15.0 or later for `npm stage publish` (trusted publishing itself needs 11.5.1 on
 Node 22.14). `release.yml` pins the version rather than trusting the runner's.
 
-### 3. PyPI and TestPyPI — trusted publishing
+### 3. PyPI — trusted publishing
 
-Same idea, no token. On **both** pypi.org and test.pypi.org → *Your projects → Publishing → Add a
-new publisher → GitHub*:
+Same idea, no token. On pypi.org → *Your projects → Publishing → Add a new publisher → GitHub*:
 
 | Field | Value |
 |---|---|
 | Owner | `thaildhe172591` |
 | Repository | `delphi-team` |
 | Workflow | `release.yml` |
-| Environment | `pypi` on PyPI, `testpypi` on TestPyPI |
+| Environment | `pypi` |
 
 For a project that does not exist yet, use **"pending publisher"**. PyPI supports configuring a
 trusted publisher *before* the first upload, which npm does not — so PyPI needs no token at any
@@ -158,8 +156,12 @@ Then, in order, each waiting for you:
 | | What approving means |
 |---|---|
 | **npm** | first release: published and installable. After that: staged, and **nobody can install it** until step 5 |
-| **TestPyPI** | on TestPyPI, where a broken wheel can still be deleted |
 | **PyPI** | on PyPI, permanently — a version number cannot be reused |
+
+There is no TestPyPI rehearsal, so the PyPI gate is the point of no return. What stands in for it
+runs before you are asked: `twine check` on every distribution, and the wheels job installs the
+wheel it just built and runs `delphi --version`. That covers metadata and whether the thing runs —
+it does not cover whether it does the right thing, so read what you are approving.
 
 ### 5. Release the npm package yourself
 
@@ -177,11 +179,10 @@ npm stage approve delphi-team   # release it
 Or approve it on npmjs.com. Either way you are challenged for 2FA — an OIDC token cannot do this
 and neither can an access token, which is the point.
 
-Before approving, try it:
+Before approving, try it — the staged tarball is downloadable even though nobody can install it:
 
 ```bash
-pipx install --index-url https://test.pypi.org/simple/ delphi-team
-delphi doctor
+npm stage download delphi-team
 ```
 
 `npm stage reject` throws the staged version away if it is wrong. Nothing was ever installable,
@@ -199,7 +200,8 @@ The GitHub release — binaries, checksums, SBOM, generated notes — is created
 tag again — the version number is not spent, because it never reached the registry.
 
 **After PyPI:** that version number is spent. PyPI does not allow re-uploading a version, even after
-deleting it. Release a patch.
+deleting it. Release a patch. With no TestPyPI stage there is no rehearsal for this one — the gate
+is the only thing between a tag and a permanent version.
 
 **After you approve the staged npm version:** it is on the registry and people can install it. Move
 `latest` back to the previous good version, then release a patch.

@@ -104,7 +104,10 @@ delphi-team/
 3. Publish npm với provenance (trusted publishing nếu khả dụng) — ~~dist-tag `next` trước, `latest` sau khi duyệt~~
    → **sửa đổi C-020 (2026-09-18): `npm stage publish`, chủ dự án duyệt trên npmjs bằng 2FA.**
    OIDC chỉ ký `npm publish` và `npm stage publish`; `npm dist-tag add` sẽ cần token dài hạn trong repo.
-4. Build wheels + sdist; publish PyPI bằng **trusted publishing (OIDC)**; TestPyPI trước.
+4. Build wheels + sdist; publish PyPI bằng **trusted publishing (OIDC)**; ~~TestPyPI trước~~
+   → **sửa đổi C-022 (2026-09-18): không dùng TestPyPI, publish thẳng PyPI.**
+   Thay vào đó kiểm trước cổng duyệt: `twine check` mọi distribution, và job wheels cài
+   wheel vừa build rồi chạy `delphi --version`.
 5. GitHub Release: binaries, checksums, SBOM, ghi chú phát hành.
 6. Cập nhật plugin marketplace manifest.
 **Điểm dừng:** mọi bước publish cần chủ dự án duyệt (environment protection rule).
