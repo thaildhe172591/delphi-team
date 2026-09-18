@@ -8,8 +8,9 @@ import {
   readyToStart,
 } from '@delphi-team/core'
 import { Command } from 'commander'
-import { type Context, requireInitialised, resolveProject } from '../context.js'
+import { type Context, requireInitialised, resolveProject, UserError } from '../context.js'
 import { columns, createReporter, plural } from '../output.js'
+import { startWebWatch } from '../web.js'
 import { seatState } from './dept.js'
 
 /**
@@ -26,6 +27,8 @@ interface Snapshot {
   seats: Array<{ seat: string; state: string; waitingFor: string | null; task: string }>
   adapterReachable: boolean
   counts: Record<string, number>
+  /** The whole board, for the web view, which shows it rather than summarising it. */
+  tasks: Array<{ id: string; status: string; owner: string; title: string }>
   ready: string[]
   blocked: Array<{ id: string; owner: string; reason: string }>
   recent: Array<{ timestamp: string; seat: string; event: string }>
@@ -78,6 +81,12 @@ async function snapshot(context: Context, slug: string): Promise<Snapshot> {
     seats,
     adapterReachable: agents !== null,
     counts,
+    tasks: board.tasks.map((task) => ({
+      id: task.id,
+      status: task.status,
+      owner: task.owner,
+      title: task.title,
+    })),
     ready: readyToStart(board).map((t) => t.id),
     blocked: board.tasks
       .filter((t) => t.status === 'blocked')
@@ -95,12 +104,30 @@ export function watchCommand(): Command {
     .description('a read-only view of the department')
     .option('--follow', 'keep refreshing until you stop it')
     .option('--interval <seconds>', 'how often to refresh with --follow', '5')
+    .option('--web', 'serve the same view on localhost instead of printing it')
+    .option('--port <port>', 'port for --web', '4173')
     .option('--project <slug>')
     .option('--json', 'machine-readable output')
     .action(async (options) => {
       const report = createReporter(Boolean(options.json))
       const context = await requireInitialised()
       const slug = await resolveProject(context, options.project)
+
+      if (options.web) {
+        const port = Number(options.port)
+        if (!Number.isInteger(port) || port < 1 || port > 65535) {
+          throw new UserError(`--port needs a port number, not "${String(options.port)}"`)
+        }
+
+        const served = await startWebWatch(context, slug, {
+          port,
+          state: () => snapshot(context, slug),
+        })
+        report.line(`Watching ${slug} at ${served.url}`)
+        report.line('Read-only. Change the board with `delphi`. Ctrl+C to stop.')
+        // Nothing to await: the server holds the process open until it is stopped.
+        return
+      }
 
       if (!options.follow) {
         const view = await snapshot(context, slug)
