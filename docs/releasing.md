@@ -19,10 +19,12 @@ order, before the first release.
 
 | Environment | Gates |
 |---|---|
-| `npm-next` | publishing to npm under the `next` tag |
+| `npm-stage` | uploading to npm's stage queue |
 | `testpypi` | publishing to TestPyPI |
 | `pypi` | publishing to PyPI |
-| `npm-latest` | moving npm's `latest` tag onto the new version |
+
+> If you created an `npm-next` and an `npm-latest` environment earlier, rename `npm-next` to
+> `npm-stage` and delete `npm-latest`. npm releases are promoted on npmjs now, not by a job.
 
 Without the reviewers these environments are decoration and the pipeline publishes on its own.
 **Adding the reviewer is the stop point.** Everything else here is plumbing.
@@ -48,7 +50,11 @@ On npmjs.com → the `delphi-team` package → **Settings → Trusted Publisher 
 | Organization or user | `thaildhe172591` |
 | Repository | `delphi-team` |
 | Workflow filename | `release.yml` |
-| Environment | `npm-next` |
+| Environment | `npm-stage` |
+
+Leave **"can also publish directly with `npm publish`" off**. `npm stage publish` is always
+allowed, and a publisher that cannot publish directly is one that cannot put anything in front of
+a user without you approving it — even if the workflow is compromised.
 
 Every field is **case-sensitive and must match exactly**. The workflow filename in particular:
 renaming `release.yml` breaks publishing until npmjs is updated to match, which is why there is a
@@ -69,8 +75,8 @@ note saying so at the top of that file.
 >    token ever exists — but the first version skips every gate, and you learn nothing about the
 >    pipeline until the second release.
 
-Requires npm 11.5.1 or later on Node 22.14 or later; `release.yml` pins the npm version rather than
-trusting the runner's.
+Requires npm 11.15.0 or later for `npm stage publish` (trusted publishing itself needs 11.5.1 on
+Node 22.14). `release.yml` pins the version rather than trusting the runner's.
 
 ### 3. PyPI and TestPyPI — trusted publishing
 
@@ -142,20 +148,35 @@ Then, in order, each waiting for you:
 
 | | What approving means |
 |---|---|
-| **npm @next** | on npm, installable only as `delphi-team@next` |
+| **npm-stage** | uploaded to npm's stage queue. **Nobody can install it** |
 | **TestPyPI** | on TestPyPI, where a broken wheel can still be deleted |
 | **PyPI** | on PyPI, permanently — a version number cannot be reused |
-| **npm @latest** | what `npm install -g delphi-team` gives everyone |
 
-Between the first gate and the last, install it yourself:
+### 5. Release the npm package yourself
+
+The staged version is not on npm until you say so, and that step is deliberately not automated:
+it needs a human with a 2FA challenge.
 
 ```bash
-npm install -g delphi-team@next
-delphi doctor
-pipx install --index-url https://test.pypi.org/simple/ delphi-team
+npm stage list delphi-team      # what is waiting
+npm stage view delphi-team      # what is in it
+npm stage approve delphi-team   # release it
 ```
 
-The GitHub release — binaries, checksums, SBOM, generated notes — is created after the last gate.
+Or approve it on npmjs.com. Either way you are challenged for 2FA — an OIDC token cannot do this
+and neither can an access token, which is the point.
+
+Before approving, try it:
+
+```bash
+pipx install --index-url https://test.pypi.org/simple/ delphi-team
+delphi doctor
+```
+
+`npm stage reject` throws the staged version away if it is wrong. Nothing was ever installable,
+so there is nothing to retract and no version number is spent.
+
+The GitHub release — binaries, checksums, SBOM, generated notes — is created after the gates.
 
 ---
 
@@ -163,17 +184,19 @@ The GitHub release — binaries, checksums, SBOM, generated notes — is created
 
 **Before any approval:** do nothing. Nothing was published. Fix it, tag the next patch.
 
-**After npm `@next`, before `@latest`:** nobody has it unless they asked for `@next` by name. Fix
-forward with a new version. Do not unpublish; do not move `latest` onto it.
+**Staged but not approved:** nobody can install it at all. `npm stage reject delphi-team`, fix, and
+tag again — the version number is not spent, because it never reached the registry.
 
 **After PyPI:** that version number is spent. PyPI does not allow re-uploading a version, even after
 deleting it. Release a patch.
 
-**After npm `@latest`:** move the tag back to the previous good version, then release a patch.
+**After you approve the staged npm version:** it is on the registry and people can install it. Move
+`latest` back to the previous good version, then release a patch.
 
 ```bash
 npm dist-tag add delphi-team@<previous> latest
 ```
 
-`npm unpublish` is almost never the answer. It breaks every lockfile that already references the
-version, and within 72 hours it also blocks reusing the number.
+That is one of the few things an OIDC token cannot do, so it needs `npm login` from your own
+machine. `npm unpublish` is almost never the answer: it breaks every lockfile that already
+references the version, and within 72 hours it also blocks reusing the number.

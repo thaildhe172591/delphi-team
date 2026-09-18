@@ -4,8 +4,14 @@ name: Release
 # approve: each publish job names a GitHub environment, and those environments carry
 # required reviewers. A tag starts the pipeline; it does not finish it.
 #
-# The order is PACKAGING_SPEC section 6: verify, build, npm@next, TestPyPI, PyPI, npm@latest,
-# GitHub release. Anything that can be checked is checked before anything is published.
+# The order follows PACKAGING_SPEC section 6 -- verify, build, npm, TestPyPI, PyPI, GitHub
+# release -- with one amendment (C-020): npm goes to the *stage queue* rather than to the
+# `next` tag, and you promote it on npmjs with 2FA instead of a second job moving a dist-tag.
+# OIDC signs `npm publish` and `npm stage publish` and nothing else, so the dist-tag the spec
+# describes would have required a permanent token in this repository -- the exact thing
+# trusted publishing exists to remove.
+#
+# Anything that can be checked is checked before anything is published.
 #
 # NOTE: the filename matters. npm trusted publishing is configured against this exact
 # workflow filename, so renaming this file breaks publishing until npmjs is updated to match.
@@ -28,9 +34,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Trusted publishing needs npm 11.5.1+ on Node 22.14+. The runner's bundled npm is older
-  # than that for long enough after a Node release to be worth pinning rather than hoping.
-  NPM_VERSION: '11.5.1'
+  # `npm stage publish` needs 11.15.0+; trusted publishing needs 11.5.1+ on Node 22.14+.
+  # Pinned rather than hoping: the runner's bundled npm trails a Node release for a while.
+  NPM_VERSION: '11.15.0'
 
 jobs:
   verify:
@@ -203,12 +209,12 @@ jobs:
           path: dist-wheels/
           retention-days: 7
 
-  npm-next:
-    name: npm @next
+  npm-stage:
+    name: npm (staged)
     needs: [verify, binaries]
     if: github.event_name == 'push' || !inputs.dry_run
     runs-on: ubuntu-latest
-    environment: npm-next
+    environment: npm-stage
     permissions:
       contents: read
       id-token: write # trusted publishing, and provenance
@@ -225,9 +231,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      # `next` first, never `latest`. A package published straight to `latest` is installed
-      # by everyone the moment it exists, including if it is broken.
-      - name: Publish
+      # Staged, never straight to the registry. A staged version is uploaded but *not
+      # installable* by anyone until a human approves it on npmjs with a 2FA challenge --
+      # which is a stronger gate than a dist-tag, because a mistake here is invisible to
+      # everyone else rather than merely unadvertised.
+      - name: Stage the release
         working-directory: packages/cli
         env:
           # Deliberately not `NODE_AUTH_TOKEN`. `setup-node` writes an .npmrc containing
@@ -237,15 +245,17 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [ -n "$NPM_TOKEN" ]; then
-            echo "Publishing with a token. Configure trusted publishing on npmjs, then delete NPM_TOKEN."
-            NODE_AUTH_TOKEN="$NPM_TOKEN" npm publish --provenance --access public --tag next
+            echo "Staging with a token. Configure trusted publishing on npmjs, then delete NPM_TOKEN."
+            NODE_AUTH_TOKEN="$NPM_TOKEN" npm stage publish --provenance --access public
           else
-            echo "Publishing with trusted publishing (OIDC). Provenance is automatic."
+            echo "Staging with trusted publishing (OIDC). Provenance is automatic."
             # No auth line at all, so the CLI looks for an OIDC token instead of sending
             # an empty one.
             rm -f "$HOME/.npmrc"
-            npm publish --access public --tag next
+            npm stage publish --access public
           fi
+
+          echo "::notice::Staged. Nobody can install it yet. Approve it on npmjs with 2FA, or run 'npm stage approve' from a trusted device."
 
   testpypi:
     name: TestPyPI
@@ -286,31 +296,9 @@ jobs:
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
 
-  npm-latest:
-    name: npm @latest
-    needs: [npm-next, pypi]
-    runs-on: ubuntu-latest
-    environment: npm-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-      - run: npm install -g npm@${{ env.NPM_VERSION }}
-
-      # Moving the tag rather than publishing again: the artifact people get on `latest` is
-      # byte-for-byte the one that was on `next` and was installed from there first.
-      - name: Move latest onto this version
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm dist-tag add delphi-team@${{ needs.verify.outputs.version }} latest
-
   github-release:
     name: GitHub release
-    needs: [npm-latest]
+    needs: [npm-stage, pypi]
     runs-on: ubuntu-latest
     permissions:
       contents: write

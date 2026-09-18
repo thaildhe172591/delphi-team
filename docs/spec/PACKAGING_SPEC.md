@@ -101,7 +101,9 @@ delphi-team/
 `release.yml` (khi tạo tag `v*` sau khi chủ dự án duyệt):
 1. `changesets` → version + CHANGELOG; `scripts/sync-version` cập nhật `pyproject.toml`, plugin manifest.
 2. Build binaries theo ma trận; tạo checksum SHA-256.
-3. Publish npm với provenance (trusted publishing nếu khả dụng) — dist-tag `next` trước, `latest` sau khi duyệt.
+3. Publish npm với provenance (trusted publishing nếu khả dụng) — ~~dist-tag `next` trước, `latest` sau khi duyệt~~
+   → **sửa đổi C-020 (2026-09-18): `npm stage publish`, chủ dự án duyệt trên npmjs bằng 2FA.**
+   OIDC chỉ ký `npm publish` và `npm stage publish`; `npm dist-tag add` sẽ cần token dài hạn trong repo.
 4. Build wheels + sdist; publish PyPI bằng **trusted publishing (OIDC)**; TestPyPI trước.
 5. GitHub Release: binaries, checksums, SBOM, ghi chú phát hành.
 6. Cập nhật plugin marketplace manifest.
