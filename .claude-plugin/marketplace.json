@@ -10,7 +10,7 @@
       "name": "delphi-team",
       "source": "./plugin",
       "description": "The seats and the skills that drive them. The ledger and every delphi command come from the CLI: `npm install -g delphi-team`.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "thaildhe172591",
         "url": "https://github.com/thaildhe172591"
