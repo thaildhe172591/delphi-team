@@ -1,5 +1,7 @@
 # delphi-team documentation
 
+**English** · [Tiếng Việt](README.vi.md)
+
 Run Claude Code as a department: one orchestrator you talk to, and specialist seats — BA, PM, tech
 lead, backend, frontend, DB, QA, tester, reviewer — each with its own role, memory and file scope.
 
@@ -10,6 +12,7 @@ lead, backend, frontend, DB, QA, tester, reviewer — each with its own role, me
 
 | | |
 |---|---|
+| [**Guide**](guide.md) · [vi](guide.vi.md) | How delphi works and how to work with it: the model, the ledger, a shift end to end |
 | [**Trying it**](try-it.md) | A walk through the tool in the order that makes sense to run it, with every command marked free or quota-spending |
 | [**Example departments**](../examples/README.md) | The three packs — solo developer, software team, content team — and how to apply one |
 | [**Writing a role**](writing-a-role.md) | Teaching delphi a job it does not know yet, and when not to |
