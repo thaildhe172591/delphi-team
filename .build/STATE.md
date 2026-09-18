@@ -4,16 +4,23 @@ Updated: 2026-09-18 · **Phase 6 (Experience) — DONE.** Waiting on the owner t
 
 ## Where Phase 7 stands
 
-**Half released, 2026-09-18.** `v0.1.0` is tagged and pushed.
+**Released, 2026-09-18.** v0.1.0 is out on all three channels.
 
-- **PyPI: published.** 0.1.0 is live with six wheels and an sdist. Permanent; the number is spent.
-- **npm: not published.** The job failed with `EOTP` (C-023) and nothing reached the registry, so
-  0.1.0 is still free there. Fix is a granular token with **Bypass 2FA** enabled, then re-run the
-  failed job -- the versions stay in step.
-- **GitHub release: not created.** It needs the npm job, so it will run once npm does.
+| | |
+|---|---|
+| npm | `delphi-team@0.1.0`, with provenance. Verified by running `npx delphi-team@0.1.0 --version` |
+| PyPI | `delphi-team` 0.1.0, six wheels and an sdist |
+| GitHub | [v0.1.0](https://github.com/thaildhe172591/delphi-team/releases/tag/v0.1.0), 15 assets |
 
-Do not bump the version to get out of this. npm 0.1.0 is unclaimed, and a bump would put the two
-distributions permanently out of step for no reason.
+It took three attempts and found three defects that no dry run could (C-023, C-024). The GitHub
+release was assembled by hand from run 35320046949's artifacts, because a re-run uses the workflow
+file the run started with; the fixes are in `release.yml` for v0.1.1 onwards.
+
+**Still the owner's, and the release is not finished until both are done:**
+1. Configure the npm trusted publisher (repo `delphi-team`, workflow `release.yml`, environment
+   `npm-stage`) and choose **stage-only** -- npm's own console recommends it over direct publish.
+2. **Delete the `NPM_TOKEN` secret.** It is a bypass-2FA token with write access to every package
+   on the account. It exists for one release, and that release is done.
 
 ### Before this
 
