@@ -2,6 +2,26 @@
 
 Updated: 2026-09-18 · **Phase 6 (Experience) — DONE.** Waiting on the owner to approve Phase 7, which is release and a mandatory stop point.
 
+## Where Phase 7 stands
+
+The release pipeline is built and **proved by running it**: `gh workflow run release.yml -f dry_run=true`
+is green end to end -- verify, 6 binaries, 6 wheels, sdist, SBOM -- with every publish job correctly
+skipped. Two defects were found that way and only that way (C-020, C-021).
+
+Done, on the owner's side: the three GitHub environments (`npm-stage`, `testpypi`, `pypi`), each with the
+owner as required reviewer and `prevent_self_review` off; a short-lived `NPM_TOKEN`; PyPI configured.
+
+Still the owner's to check before tagging:
+- **2FA on the npm account.** `npm stage approve` needs a 2FA challenge, so without it every release
+  after the first stages fine and can never be approved.
+- **TestPyPI as well as PyPI** -- the pipeline goes through TestPyPI first, and the environment names
+  must be exactly `testpypi` and `pypi`.
+
+`delphi-team` is unclaimed on npm, PyPI and TestPyPI as of 2026-09-18. Version is 0.1.0 on both
+manifests with no pending changeset, so `v0.1.0` is the tag the verify job expects.
+
+**Tagging is the stop point.** Do not tag without the owner saying so in that session.
+
 ## Current phase
 Phases 0 to 3 complete. The repository is public, CI runs on every push, and delphi is set up on itself.
 
