@@ -16,11 +16,17 @@ It took three attempts and found three defects that no dry run could (C-023, C-0
 release was assembled by hand from run 35320046949's artifacts, because a re-run uses the workflow
 file the run started with; the fixes are in `release.yml` for v0.1.1 onwards.
 
-**Still the owner's, and the release is not finished until both are done:**
-1. Configure the npm trusted publisher (repo `delphi-team`, workflow `release.yml`, environment
-   `npm-stage`) and choose **stage-only** -- npm's own console recommends it over direct publish.
-2. **Delete the `NPM_TOKEN` secret.** It is a bypass-2FA token with write access to every package
-   on the account. It exists for one release, and that release is done.
+**Phase 7 is complete.** The npm trusted publisher is configured stage-only, the package requires
+2FA and disallows bypass-2fa tokens, and no secret remains in the repository. There is no
+credential anywhere in this pipeline any more.
+
+So v0.1.1 onwards goes: tag -> approve `npm-stage` -> the version is *staged and uninstallable*
+-> `npm stage approve` with 2FA. Nobody, including a compromised workflow, can put a version in
+front of a user without the owner answering a 2FA challenge.
+
+GitHub Actions were bumped afterwards (checkout 7, setup-python 7, upload-artifact 7) and a dry
+run confirmed `upload-artifact@v7` still feeds `download-artifact@v8`. That run also showed the
+binaries hash identical to v0.1.0's, so the build is reproducible across runs.
 
 ### Before this
 
