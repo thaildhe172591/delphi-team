@@ -44,7 +44,12 @@ jobs:
         with:
           # One version across npm, PyPI, the plugin manifest and the GitHub release. Doing
           # it here rather than by hand is what stops them drifting apart between releases.
-          version-script: pnpm changeset version && pnpm sync-version
+          #
+          # It has to be a single command. The action splits this string into argv and runs
+          # it directly, with no shell, so a `&&` here arrives as a literal argument and
+          # changesets exits with "Unused args: `&&`". The two steps live in
+          # `pnpm version-packages` instead (C-025).
+          version-script: pnpm version-packages
           pr-title: 'chore: version packages'
           commit-message: 'chore: version packages'
           # This workflow opens a pull request and does nothing else. No `publish` script, so
