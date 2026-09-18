@@ -60,17 +60,26 @@ Every field is **case-sensitive and must match exactly**. The workflow filename 
 renaming `release.yml` breaks publishing until npmjs is updated to match, which is why there is a
 note saying so at the top of that file.
 
-> **The first publish is the awkward one, and npm is the awkward half.** Trusted publishing is
-> configured on a package that already exists, and yours does not. PyPI has no such problem — see
-> below — so this applies to npm alone.
+> **The first publish is the awkward one, and npm is the awkward half.** Two npm features both
+> refuse to work on a package that does not exist yet, and yours does not:
+>
+> - trusted publishing is configured on an existing package, so the first release needs a token
+> - **staging cannot create a package either** — npm's own words are that you cannot stage a
+>   brand-new package — so the first release publishes *directly*
+>
+> Both exceptions end at the same moment, which is why `release.yml` keys them off one condition:
+> if `NPM_TOKEN` is set it runs `npm publish`, and if it is not it runs `npm stage publish`.
+>
+> PyPI has no such problem — see below — so this applies to npm alone.
 >
 > Two ways through it:
 >
-> 1. **A token, once.** Create a *granular* access token scoped to this package only, with
->    read-and-write and a short expiry. Put it in the repository as the `NPM_TOKEN` secret; the
->    workflow finds it and says which path it took. Publish, configure trusted publishing, then
->    **delete the secret**. This is the one to prefer: the first release goes through the whole
->    pipeline, so you find out whether the pipeline works while the stakes are a pre-alpha.
+> 1. **A token, once.** Create a *granular* access token with read-and-write and a short expiry.
+>    It has to cover **all packages**, because you cannot scope a token to a package that does not
+>    exist — which is the other reason the expiry matters. Put it in the repository as the
+>    `NPM_TOKEN` secret. Publish, configure trusted publishing, then **delete the secret**. Prefer
+>    this: the first release goes through the whole pipeline, so you find out whether the pipeline
+>    works while the stakes are a pre-alpha.
 > 2. **Publish by hand, once**, from your own npm login, then configure trusted publishing. No
 >    token ever exists — but the first version skips every gate, and you learn nothing about the
 >    pipeline until the second release.
@@ -148,13 +157,15 @@ Then, in order, each waiting for you:
 
 | | What approving means |
 |---|---|
-| **npm-stage** | uploaded to npm's stage queue. **Nobody can install it** |
+| **npm** | first release: published and installable. After that: staged, and **nobody can install it** until step 5 |
 | **TestPyPI** | on TestPyPI, where a broken wheel can still be deleted |
 | **PyPI** | on PyPI, permanently — a version number cannot be reused |
 
 ### 5. Release the npm package yourself
 
-The staged version is not on npm until you say so, and that step is deliberately not automated:
+**From the second release on.** The first one is already live — see the note under npm setup.
+
+A staged version is not on npm until you say so, and that step is deliberately not automated:
 it needs a human with a 2FA challenge.
 
 ```bash

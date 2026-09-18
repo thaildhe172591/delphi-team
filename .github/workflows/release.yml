@@ -9,7 +9,9 @@ name: Release
 # `next` tag, and you promote it on npmjs with 2FA instead of a second job moving a dist-tag.
 # OIDC signs `npm publish` and `npm stage publish` and nothing else, so the dist-tag the spec
 # describes would have required a permanent token in this repository -- the exact thing
-# trusted publishing exists to remove.
+# trusted publishing exists to remove. The first release is the one exception: npm cannot
+# stage a package that does not exist yet, so it publishes directly with a short-lived token
+# and every release after it is staged.
 #
 # Anything that can be checked is checked before anything is published.
 #
@@ -210,7 +212,7 @@ jobs:
           retention-days: 7
 
   npm-stage:
-    name: npm (staged)
+    name: npm
     needs: [verify, binaries]
     if: github.event_name == 'push' || !inputs.dry_run
     runs-on: ubuntu-latest
@@ -231,11 +233,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-      # Staged, never straight to the registry. A staged version is uploaded but *not
-      # installable* by anyone until a human approves it on npmjs with a 2FA challenge --
-      # which is a stronger gate than a dist-tag, because a mistake here is invisible to
-      # everyone else rather than merely unadvertised.
-      - name: Stage the release
+      # Staged, never straight to the registry -- except once. A staged version is uploaded
+      # but *not installable* by anyone until a human approves it on npmjs with a 2FA
+      # challenge, which is a stronger gate than a dist-tag: a mistake is invisible to
+      # everyone rather than merely unadvertised.
+      #
+      # The exception is the first release. npm cannot stage a package that does not exist
+      # yet -- "you cannot stage a brand-new package" -- and it cannot configure trusted
+      # publishing for one either. So the two exceptions line up exactly: the token branch
+      # is the first publish and publishes directly, and once the package exists the token
+      # is deleted and every release after it is staged under OIDC.
+      - name: Publish
         working-directory: packages/cli
         env:
           # Deliberately not `NODE_AUTH_TOKEN`. `setup-node` writes an .npmrc containing
@@ -245,17 +253,17 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [ -n "$NPM_TOKEN" ]; then
-            echo "Staging with a token. Configure trusted publishing on npmjs, then delete NPM_TOKEN."
-            NODE_AUTH_TOKEN="$NPM_TOKEN" npm stage publish --provenance --access public
+            echo "First release: publishing directly, because a package that does not exist cannot be staged."
+            NODE_AUTH_TOKEN="$NPM_TOKEN" npm publish --provenance --access public
+            echo "::notice::Published and installable now. Next: configure trusted publishing on npmjs, then DELETE the NPM_TOKEN secret. Every release after that is staged."
           else
             echo "Staging with trusted publishing (OIDC). Provenance is automatic."
             # No auth line at all, so the CLI looks for an OIDC token instead of sending
             # an empty one.
             rm -f "$HOME/.npmrc"
             npm stage publish --access public
+            echo "::notice::Staged. Nobody can install it yet. Approve it with 'npm stage approve' or on npmjs -- either way you are challenged for 2FA."
           fi
-
-          echo "::notice::Staged. Nobody can install it yet. Approve it on npmjs with 2FA, or run 'npm stage approve' from a trusted device."
 
   testpypi:
     name: TestPyPI
