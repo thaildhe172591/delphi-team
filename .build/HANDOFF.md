@@ -3,7 +3,8 @@
 You are picking up a build in progress on a different machine from the one that started it.
 This file is the whole context. Read it, then `.build/STATE.md` for where the build stands.
 
-Written 2026-09-17, at the end of Phase 5, after running a real department on a real project.
+Written 2026-09-17 at the end of Phase 5; updated 2026-09-18 after the first two releases
+actually went out.
 
 ---
 
@@ -54,7 +55,7 @@ From BUILD_PROMPT and the owner, in force for every session:
 
 ## 4. Where the build is
 
-**Phases 0–6 done. Phase 7 is release, and publishing is a mandatory stop point.**
+**Every phase is done. delphi-team is published, at 0.1.1.**
 
 ```
 Phase 0  verification spikes            done
@@ -63,12 +64,23 @@ Phase 2  core, templates, CLI, hooks    done
 Phase 3  dispatch, surfaces, teams      done
 Phase 4  advanced management            done
 Phase 5  loop, MCP server, VS Code ext  done
-Phase 6  watch --web, docs, packs       done   <- you are here
-Phase 7  release                        NOT STARTED, publish = stop point
+Phase 6  watch --web, docs, packs       done
+Phase 7  release                        done   <- 0.1.0 and 0.1.1 are out
 ```
 
-Phase 7 is PACKAGING_SPEC section 6: the npm and PyPI release. Nothing is published without the
-owner saying so, in this conversation, for that specific publish.
+| | |
+|---|---|
+| npm | `delphi-team`, with SLSA provenance |
+| PyPI | `delphi-team`, six platform wheels and an sdist |
+| GitHub | releases carry six platform-named binaries, checksums and an SBOM |
+
+**Releasing is still a stop point, for every release, not just the first.** Never tag `v*`
+without the owner saying so in that session. There is no credential in the repository: npm
+authenticates by OIDC and lands *staged and uninstallable* until the owner approves it on npmjs
+with 2FA. PyPI has no second gate — approving its environment is permanent.
+
+The whole flow, and the one-time setup behind it, is `docs/releasing.md`. Read that rather than
+reconstructing it from the workflow.
 
 ### Carried debt
 
@@ -78,10 +90,12 @@ owner saying so, in this conversation, for that specific publish.
    implement it or amend the spec; both need the owner. If implemented it must only prompt when
    `process.stdout.isTTY` — the orchestrator runs `dept up` through the Bash tool in a non-interactive
    session, and a prompt there would hang the department.
-1. `packages/cli` has **no README**, so the npm page would be blank. Needed before any publish.
+1. `packages/cli/src/commands/dept.ts:27` imports `execa` and never uses it. biome reports it as a
+   warning, so CI stays green and prints it on every run. One line.
 2. `delphi cost` counts sessions, not money, and says so in its own output. Whether to keep it at
-   all is the owner's call at release (C-009).
-3. **Spike 6** — whether a VS Code session joins the cross-session world — needs the owner to run
+   all is the owner's call (C-009).
+3. `docs/releasing.md` is English only, while README and guide are bilingual.
+4. **Spike 6** — whether a VS Code session joins the cross-session world — needs the owner to run
    `node scripts/spike-vscode-inbox.mjs`, because it needs a Claude Code session started *inside*
    VS Code and no tool call can do that. Nothing built depends on the answer.
 
@@ -165,6 +179,29 @@ The whole of this list came from one afternoon of actually using it, and none of
   `dept up` called, so two stories claiming one file were both dispatched and one seat deleted the other's
   uncommitted work. `checkStories()` is shared now; do not move it back inside the planner (C-018).
 
+### Found by releasing (2026-09-18)
+
+Five, and none of them was visible in the file. Detail is in `.build/CONFLICTS.md` sections K and L.
+
+- **`scripts/fake-claude.mjs` was mode 644.** It has a shebang and is spawned directly, so Linux
+  answered EACCES and no dispatch started. Windows ignores the executable bit, so every local run
+  had passed (C-021).
+- **npm cannot stage a package that does not exist**, and cannot configure trusted publishing for
+  one either. Both exceptions end at the same moment, so `release.yml` keys them off one condition:
+  `NPM_TOKEN` present means the first release and a direct publish (C-020).
+- **A token cannot publish once the account has 2FA** unless the token itself has *Bypass 2FA*.
+  The run signed provenance and wrote it to the transparency log before failing with `EOTP`, so
+  the failure looked total and late (C-023).
+- **All six binaries were named `delphi`.** GitHub names a release asset after its file, so one
+  won and five collided — and `needs.verify.outputs.version` was empty because the `needs` context
+  exposes only *direct* dependencies. Both lived in the one job every dry run skips (C-024).
+- **`changesets/action` does not run `version-script` through a shell**, so `&&` arrived as an
+  argument; and `sync-version` never touched the plugin manifests although its own header said it
+  did. `version.yml` had been green for days because there was no changeset to act on (C-025).
+
+**The sharper version of the lesson below: green is not tested.** A job skipped by `if:` and a job
+that runs with nothing to do look identical in a green check.
+
 ### The largest finding
 
 **Agent Teams does not work the way the spec assumed.** With
@@ -227,7 +264,11 @@ files.generated.ts`) by `scripts/build-templates.mjs`. **Edit the files under
 ## 9. Starting a session on this
 
 There is no ceremony. Read this file, read `.build/STATE.md`, run `pnpm check`, and ask the owner
-which phase to work on. `.delphi/` holds delphi's own board, so `delphi task list` shows the
-remaining phases as tasks.
+what to work on. `.delphi/` holds delphi's own board, so `delphi task list` shows what is left.
+
+The build phases are finished, so work now is maintenance and whatever the owner asks for next.
+`.build/CONFLICTS.md` is worth reading before touching the release pipeline: C-020 to C-025 are
+all amendments to the spec or defects the pipeline only revealed by running, and the reasoning
+is there rather than in the workflow comments.
 
 If you are about to do something on the stop-point list in §3 — stop and ask.
