@@ -15,6 +15,7 @@ import {
   readTemplate,
 } from '../templates/index.js'
 import { mergeClaudeMd } from './claudemd.js'
+import { mergeGitattributes } from './gitattributes.js'
 import { mergeDelphiHooks, type Settings } from './settings.js'
 
 /**
@@ -135,6 +136,19 @@ export function planInit(input: InitInput): InitPlan {
     action:
       existing['CLAUDE.md'] === undefined ? 'create' : claudeMd.change === 'unchanged' ? 'keep' : 'merge',
     note: 'imports .delphi/PROTOCOL.md so every session loads the protocol',
+  })
+
+  const gitattributes = mergeGitattributes(existing['.gitattributes'] ?? '')
+  writes.push({
+    path: '.gitattributes',
+    content: gitattributes.content,
+    action:
+      existing['.gitattributes'] === undefined
+        ? 'create'
+        : gitattributes.change === 'unchanged'
+          ? 'keep'
+          : 'merge',
+    note: 'keeps the ledger LF, so git on Windows does not report it as wholly changed',
   })
 
   const settingsPath = '.claude/settings.json'
