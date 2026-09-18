@@ -125,6 +125,22 @@ jobs:
             bun-windows-x64 bun-darwin-arm64 bun-darwin-x64 \
             bun-linux-x64 bun-linux-arm64 bun-linux-x64-musl
 
+      # Every binary is called `delphi`, which is right on a PATH and wrong as a release asset:
+      # GitHub names an asset after the file, so six files called `delphi` collide and the
+      # upload fails. Renaming here rather than at upload time means SHA256SUMS lists the names
+      # people actually download, which is the only way `sha256sum -c` is any use to them.
+      - name: Name each binary after its platform
+        working-directory: dist-binaries
+        run: |
+          for dir in bun-*; do
+            for file in "$dir"/*; do
+              case "$file" in *.exe) ext=.exe ;; *) ext= ;; esac
+              mv "$file" "delphi-${dir#bun-}$ext"
+            done
+            rmdir "$dir"
+          done
+          ls -l
+
       - name: Checksums
         working-directory: dist-binaries
         run: |
@@ -161,12 +177,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { target: bun-windows-x64, tag: py3-none-win_amd64, exe: delphi.exe }
-          - { target: bun-darwin-arm64, tag: py3-none-macosx_11_0_arm64, exe: delphi }
-          - { target: bun-darwin-x64, tag: py3-none-macosx_10_12_x86_64, exe: delphi }
-          - { target: bun-linux-x64, tag: py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64, exe: delphi }
-          - { target: bun-linux-arm64, tag: py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64, exe: delphi }
-          - { target: bun-linux-x64-musl, tag: py3-none-musllinux_1_2_x86_64, exe: delphi }
+          - { target: bun-windows-x64, asset: delphi-windows-x64.exe, tag: py3-none-win_amd64, exe: delphi.exe }
+          - { target: bun-darwin-arm64, asset: delphi-darwin-arm64, tag: py3-none-macosx_11_0_arm64, exe: delphi }
+          - { target: bun-darwin-x64, asset: delphi-darwin-x64, tag: py3-none-macosx_10_12_x86_64, exe: delphi }
+          - { target: bun-linux-x64, asset: delphi-linux-x64, tag: py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64, exe: delphi }
+          - { target: bun-linux-arm64, asset: delphi-linux-arm64, tag: py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64, exe: delphi }
+          - { target: bun-linux-x64-musl, asset: delphi-linux-x64-musl, tag: py3-none-musllinux_1_2_x86_64, exe: delphi }
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -181,7 +197,9 @@ jobs:
       - name: Put this target's binary where the wheel looks for it
         run: |
           mkdir -p python/src/delphi_team/bin
-          cp "dist-binaries/${{ matrix.target }}/${{ matrix.exe }}" python/src/delphi_team/bin/
+          # The asset carries its platform; inside the wheel it goes back to the plain name,
+          # because that is what `_shim.py` looks for.
+          cp "dist-binaries/${{ matrix.asset }}" "python/src/delphi_team/bin/${{ matrix.exe }}"
           chmod +x "python/src/delphi_team/bin/${{ matrix.exe }}"
 
       - name: Build
@@ -311,7 +329,10 @@ jobs:
 
   github-release:
     name: GitHub release
-    needs: [npm-stage, pypi]
+    # `verify` is here for its output, not its ordering: the `needs` context exposes only
+    # direct dependencies, so without it `needs.verify.outputs.version` is empty and the
+    # release comes out titled "v". No dry run caught that, because they all skip this job.
+    needs: [verify, npm-stage, pypi]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -333,4 +354,4 @@ jobs:
             --generate-notes \
             --verify-tag \
             release/SHA256SUMS release/sbom.cdx.json \
-            $(find release -type f \( -name 'delphi' -o -name 'delphi.exe' -o -name '*.whl' -o -name '*.tar.gz' \))
+            $(find release -type f \( -name 'delphi-*' -o -name '*.whl' -o -name '*.tar.gz' \) ! -name '*.tgz')
