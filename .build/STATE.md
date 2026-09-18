@@ -48,7 +48,7 @@ scripts/            sync-version · build-binaries · build-templates
 - **A real department ran on a real project.** dev-be took a story from `ready` to `review` with `npm test`
   green, filed a report, handed over. The orchestrator drove it from a `claude` session and reported two
   defects in delphi itself while doing so.
-- **345 tests pass.** `packages/core` coverage was 92/85/94/93 at the end of 2a and has grown since.
+- `packages/core` coverage was 92/85/94/93 at the end of 2a and has grown since.
 - The MCP server was checked three ways: unit tests, a real JSON-RPC exchange over stdio, and registration
   through `claude mcp add`, which correctly held the project-scoped server as pending approval.
 - `delphi loop` cannot start more than `--max-stories x --max-attempts` sessions. A test pins the bound;
@@ -119,7 +119,7 @@ R01-R25 to where each requirement is met.
 
 ## Quick verification commands
 ```bash
-pnpm check                      # lint, build, typecheck, 345 tests
+pnpm check                      # lint, build, typecheck, 357 tests
 node scripts/loop-lab.mjs       # the loop end to end, for free
 node packages/cli/dist/index.js doctor
 ```

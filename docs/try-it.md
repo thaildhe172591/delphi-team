@@ -15,7 +15,7 @@ pnpm install
 pnpm check
 ```
 
-`pnpm check` is lint → build → typecheck → 345 tests. If it is green, the build is sound.
+`pnpm check` is lint → build → typecheck → 357 tests. If it is green, the build is sound.
 
 Then either put the CLI on PATH:
 
@@ -203,10 +203,16 @@ Everything above is free. These start real Claude Code sessions and consume your
 ```bash
 delphi dispatch dev-be T-001 --project shop     # one seat, one story, in the background
 delphi dept up --project shop                   # the whole department
-delphi dept up --project shop --surface wt      # ...and split Windows Terminal to watch them
 delphi loop --project shop --yes                # up to max-stories × max-attempts sessions
 delphi meeting techlead qa --topic "..."        # several seats on one question
 ```
+
+Each of these opens a pane per seat: `dispatch.surface` defaults to `auto`, which splits tmux
+inside tmux, leaves the VS Code terminal to the companion extension, and splits Windows Terminal
+otherwise. You keep your own pane and the seats stack beside it. `--surface none` turns it off.
+
+The panes land in a Windows Terminal window, so run `claude` *from* Windows Terminal if you want
+them to split the window you are already looking at.
 
 Start with `delphi dispatch` on a single small story. It is one session, it is named, and
 `delphi dept down` stops everything delphi started.
