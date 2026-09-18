@@ -37,7 +37,21 @@ forever with nobody able to release it.
 administrator, so it makes the gate a reminder rather than a barrier. That is a reasonable escape
 hatch for a solo maintainer and a hole in a team. Decide which you are.
 
-### 2. npm — trusted publishing
+### 2. Let Actions open the version pull request
+
+`Settings → Actions → General → Workflow permissions` → tick **"Allow GitHub Actions to create
+and approve pull requests"**.
+
+Without it `version.yml` does all its work and then fails on the last line with *"GitHub Actions
+is not permitted to create or approve pull requests"*, and no release can be cut because the
+version is never bumped.
+
+The setting grants create *and* approve, with no way to separate them. What that is worth
+depends on your branch protection: with none, approving a pull request unlocks nothing. It does
+not touch environment reviewers -- those are a different mechanism, and a workflow cannot approve
+its own deployment.
+
+### 3. npm — trusted publishing
 
 Trusted publishing means no long-lived token in your repository. npm authenticates the workflow
 itself through OIDC, and publishes provenance automatically.
@@ -97,7 +111,7 @@ note saying so at the top of that file.
 Requires npm 11.15.0 or later for `npm stage publish` (trusted publishing itself needs 11.5.1 on
 Node 22.14). `release.yml` pins the version rather than trusting the runner's.
 
-### 3. PyPI — trusted publishing
+### 4. PyPI — trusted publishing
 
 Same idea, no token. On pypi.org → *Your projects → Publishing → Add a new publisher → GitHub*:
 
