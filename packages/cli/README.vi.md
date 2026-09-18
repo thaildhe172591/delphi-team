@@ -71,6 +71,22 @@ CLI cài vào dưới cả hai tên: `delphi` và `delphi-team`.
 > `delphi hook <event>` bằng tên. Thiếu nó trên PATH thì hook fail open — im lặng không làm gì, và
 > trông y hệt như đang chạy tốt.
 
+### Chỉ riêng bộ skill
+
+Sáu skill này chạy trong Claude Code, Codex, Cursor và hơn 70 agent khác, và anh **không cần cài
+delphi** mới dùng được — ví dụ để đọc một ledger do người khác dựng:
+
+```bash
+npx skills add thaildhe172591/delphi-team          # chỉ project này
+npx skills add thaildhe172591/delphi-team -g       # mọi project
+```
+
+Chúng là `delphi-dept`, `delphi-resume`, `delphi-seat`, `delphi-role`, `delphi-shift-end` và
+`delphi-checkpoint`. Tiền tố là cố ý: `resume` từng che `/resume` của chính Claude Code và chạy
+thay nó, im lặng.
+
+`delphi init` cài đúng sáu cái đó vào `.claude/skills/`, nên anh không cần cả hai.
+
 ---
 
 ## Năm phút đầu

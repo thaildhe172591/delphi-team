@@ -72,6 +72,22 @@ The CLI installs as both `delphi` and `delphi-team`.
 > `delphi hook <event>` by name. Without it on PATH they fail open and silently do nothing, which
 > looks exactly like working.
 
+### The skills, on their own
+
+The six skills work in Claude Code, Codex, Cursor and 70-odd other agents, and you do not need
+delphi installed to use them for reading a ledger someone else set up:
+
+```bash
+npx skills add thaildhe172591/delphi-team          # this project
+npx skills add thaildhe172591/delphi-team -g       # every project
+```
+
+They are `delphi-dept`, `delphi-resume`, `delphi-seat`, `delphi-role`, `delphi-shift-end` and
+`delphi-checkpoint`. The prefix is deliberate: `resume` shadowed Claude Code's own `/resume` and
+ran instead of it, silently.
+
+`delphi init` installs the same six into `.claude/skills/`, so you do not need both.
+
 ---
 
 ## Five minutes
