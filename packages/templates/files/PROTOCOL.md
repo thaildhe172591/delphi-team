@@ -27,6 +27,11 @@ at once without overwriting each other.
 Something outside it needs changing? **Message the seat that owns it.** Do not edit it yourself, do not
 "just fix it quickly", and do not widen your own scope.
 
+**Deleting is editing, and it is the one that cannot be undone.** Never remove a path you do not own — not
+as a test fixture, not "temporarily", not while cleaning up. Another seat may have written it seconds ago and
+never committed it. If you want to know what a destructive command does, find out in a scratch directory,
+never against the working tree.
+
 ## 4. Write through the commands
 
 Use `delphi` to change the ledger: `delphi task move`, `delphi journal add`, `delphi report`,

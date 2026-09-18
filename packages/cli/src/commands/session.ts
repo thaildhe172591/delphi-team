@@ -6,6 +6,7 @@ import {
   appendLine,
   BoardSchema,
   ClaudeAdapter,
+  checkStories,
   isoNow,
   openTasks,
   readOr,
@@ -17,6 +18,7 @@ import { execa } from 'execa'
 import { requireInitialised, resolveProject, UserError } from '../context.js'
 import { createReporter } from '../output.js'
 import { openPanes, reportSurface } from '../surface.js'
+import { IN_FLIGHT, readStories } from './dept.js'
 
 /** `<prefix>-<seat>`, the naming convention the orchestrator addresses seats by. */
 function sessionName(slug: string, seat: string, prefixLength: number): string {
@@ -130,6 +132,7 @@ export function dispatchCommand(): Command {
     .option('--model <model>')
     .option('--effort <effort>')
     .option('--surface <surface>', 'auto | wt | tmux | vscode | desktop | none')
+    .option('--force', 'dispatch even though a pre-flight check blocks it')
     .option('--project <slug>')
     .option('--dry-run', 'print the prompt and the command, start nothing')
     .option('--json', 'machine-readable output')
@@ -147,6 +150,29 @@ export function dispatchCommand(): Command {
         throw new UserError(
           `no story ${id}`,
           'a seat dispatched without a story has nothing to work from; write it first',
+        )
+      }
+
+      // The same pre-flight `dept up` runs. Dispatching one seat used to run none of it, so
+      // two stories claiming one file were both started and one seat deleted the other's
+      // work (C-018). Every story still in flight is included, because a story in review is
+      // not finished and its files are still spoken for.
+      const board = await readYaml(paths.board, BoardSchema, { version: 1, tasks: [] })
+      const inFlight = board.tasks.filter((task) => IN_FLIGHT.has(task.status)).map((task) => task.id)
+      const problems = checkStories(await readStories(context, slug, [...new Set([...inFlight, id])]))
+
+      const blocks = problems.filter((problem) => problem.severity === 'block')
+      for (const problem of problems.filter((p) => p.severity === 'warn')) {
+        report.warn(`${problem.message}${problem.fix ? ` — ${problem.fix}` : ''}`)
+      }
+      if (blocks.length > 0 && !options.force) {
+        throw new UserError(
+          blocks.map((problem) => problem.message).join('; '),
+          `${blocks
+            .map((problem) => problem.fix)
+            .filter(Boolean)
+            .join('; ')}
+Or pass --force if you have already decided this is fine.`,
         )
       }
 

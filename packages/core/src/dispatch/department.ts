@@ -56,23 +56,30 @@ export function guardAdmits(when: string | undefined, phase: string | undefined)
   return allowed.includes(phase)
 }
 
-export function planDepartment(input: DepartmentInput): DepartmentPlan {
+export interface StoryScope {
+  files?: string[] | undefined
+  acceptance?: string[] | undefined
+  verify?: string | undefined
+}
+
+/**
+ * The checks every dispatch owes, whoever is doing the dispatching.
+ *
+ * These used to live inside `planDepartment`, which meant `delphi dept up` ran them and
+ * `delphi dispatch` ran none. That is how two stories came to claim the same file and two
+ * seats were started on it: one of them deleted the other's work, and nothing had objected
+ * (C-018). A single-seat dispatch is still a dispatch.
+ *
+ * The collision check is the important one. The rest is what a seat needs to do the job at
+ * all: what "done" means, and which files are its own.
+ */
+export function checkStories(stories: Record<string, StoryScope>): Problem[] {
   const problems: Problem[] = []
-  const running = new Set(input.running ?? [])
 
-  const conflicts = findOwnershipConflicts(input.config.seats)
-  for (const conflict of conflicts) {
-    problems.push({
-      severity: 'block',
-      message: `${conflict.seats.join(' and ')} both own ${conflict.glob}`,
-      fix: 'give the path to one seat in .delphi/config.yaml',
-    })
-  }
-
-  // Two stories in the same shift claiming the same files is the same failure, one level
-  // down: the seats are distinct but the work still collides.
+  // Two stories in the same shift claiming the same file is the collision the ownership
+  // rule exists to prevent — the seats are distinct but the work still lands on one path.
   const claims = new Map<string, string[]>()
-  for (const [id, story] of Object.entries(input.stories)) {
+  for (const [id, story] of Object.entries(stories)) {
     for (const glob of story.files ?? []) {
       claims.set(glob, [...(claims.get(glob) ?? []), id])
     }
@@ -87,13 +94,7 @@ export function planDepartment(input: DepartmentInput): DepartmentPlan {
     }
   }
 
-  const byOwner = new Map<string, BoardEntry[]>()
-  for (const task of input.board.tasks) {
-    if (task.status !== 'ready' && task.status !== 'doing') continue
-    byOwner.set(task.owner, [...(byOwner.get(task.owner) ?? []), task])
-  }
-
-  for (const [id, story] of Object.entries(input.stories)) {
+  for (const [id, story] of Object.entries(stories)) {
     if ((story.acceptance ?? []).length === 0) {
       problems.push({
         severity: 'block',
@@ -115,6 +116,30 @@ export function planDepartment(input: DepartmentInput): DepartmentPlan {
         fix: 'the seat will have nothing to paste as evidence',
       })
     }
+  }
+
+  return problems
+}
+
+export function planDepartment(input: DepartmentInput): DepartmentPlan {
+  const problems: Problem[] = []
+  const running = new Set(input.running ?? [])
+
+  const conflicts = findOwnershipConflicts(input.config.seats)
+  for (const conflict of conflicts) {
+    problems.push({
+      severity: 'block',
+      message: `${conflict.seats.join(' and ')} both own ${conflict.glob}`,
+      fix: 'give the path to one seat in .delphi/config.yaml',
+    })
+  }
+
+  problems.push(...checkStories(input.stories))
+
+  const byOwner = new Map<string, BoardEntry[]>()
+  for (const task of input.board.tasks) {
+    if (task.status !== 'ready' && task.status !== 'doing') continue
+    byOwner.set(task.owner, [...(byOwner.get(task.owner) ?? []), task])
   }
 
   const eligible: SeatPlan[] = []

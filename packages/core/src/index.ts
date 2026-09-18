@@ -10,12 +10,14 @@ export {
   resolveWindowsShim,
 } from './adapters/claude.js'
 export {
+  checkStories,
   type DepartmentInput,
   type DepartmentPlan,
   guardAdmits,
   type Problem,
   planDepartment,
   type SeatPlan,
+  type StoryScope,
   spawnPrompt,
 } from './dispatch/department.js'
 export {

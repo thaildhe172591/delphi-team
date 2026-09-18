@@ -36,6 +36,9 @@ import { claudeBinary, openPanes, reportSurface, surfaceFor } from '../surface.j
  * core. This gathers the facts, carries out what was decided, and prints it.
  */
 
+/** Statuses whose files are still spoken for. A story in review is not finished. */
+export const IN_FLIGHT = new Set(['ready', 'doing', 'review'])
+
 export function sessionName(slug: string, seat: string, prefixLength: number): string {
   return `${slug.slice(0, prefixLength)}-${seat}`
 }
@@ -150,7 +153,10 @@ export function deptCommand(): Command {
       const teamName = (options.team as string) ?? context.config.defaults.team
       const team = readTeam(teamName)
       const board = await readYaml(paths.board, BoardSchema, { version: 1, tasks: [] })
-      const assigned = board.tasks.filter((t) => t.status === 'ready' || t.status === 'doing')
+      // `review` is in here on purpose: a story waiting on review is not finished, its seat
+      // may still be live, and its files are still spoken for. Leaving it out is how a
+      // second story was dispatched onto a file the first one still owned (C-018).
+      const assigned = board.tasks.filter((t) => IN_FLIGHT.has(t.status))
       const stories = await readStories(
         context,
         slug,
