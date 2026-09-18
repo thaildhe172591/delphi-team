@@ -18,8 +18,7 @@ file riêng.
 | [**Dùng thử từng bước**](try-it.md) | Đi qua công cụ theo thứ tự hợp lý, mỗi lệnh có đánh dấu miễn phí hay tốn quota *(tiếng Anh)* |
 | [**Phòng ban mẫu**](../examples/README.md) | Ba pack — solo-dev, software-team, content-team — và cách áp dụng *(tiếng Anh)* |
 | [**Viết một role**](writing-a-role.md) | Dạy delphi một công việc nó chưa biết, và khi nào thì không nên *(tiếng Anh)* |
-
-| [**Phát hành**](releasing.md) | Một phiên bản tới npm và PyPI thế nào, và phần cài đặt một lần chỉ anh làm được *(tiếng Anh)* |
+| [**Phát hành**](releasing.md) | Một phiên bản tới npm và PyPI thế nào, và phần một-lần chỉ anh làm được *(tiếng Anh)* |
 
 ## Ý tưởng
 

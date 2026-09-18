@@ -16,7 +16,6 @@ lead, backend, frontend, DB, QA, tester, reviewer — each with its own role, me
 | [**Trying it**](try-it.md) | A walk through the tool in the order that makes sense to run it, with every command marked free or quota-spending |
 | [**Example departments**](../examples/README.md) | The three packs — solo developer, software team, content team — and how to apply one |
 | [**Writing a role**](writing-a-role.md) | Teaching delphi a job it does not know yet, and when not to |
-
 | [**Releasing**](releasing.md) | How a version reaches npm and PyPI, and the one-time setup only you can do |
 
 ## The idea
