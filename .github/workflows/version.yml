@@ -29,15 +29,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      - uses: changesets/action@v1
+      - uses: changesets/action@v2
         with:
           # One version across npm, PyPI, the plugin manifest and the GitHub release. Doing
           # it here rather than by hand is what stops them drifting apart between releases.
