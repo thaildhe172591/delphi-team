@@ -7,6 +7,7 @@ import {
   BoardSchema,
   ClaudeAdapter,
   type ClaudeAgentEntry,
+  checkProjectContext,
   chooseDispatchMode,
   type DepartmentPlan,
   type DispatchMode,
@@ -176,6 +177,10 @@ export function deptCommand(): Command {
         ...(options.phase ? { phase: options.phase as string } : {}),
         running,
       })
+
+      plan.problems.push(
+        ...checkProjectContext(await readOr(join(context.root, 'docs', 'project-context.md'), '')),
+      )
 
       // A team can name a seat the project never built. `quick-fix` names a reviewer; a
       // project scaffolded from `feature` has none, so the plan held it as "nothing

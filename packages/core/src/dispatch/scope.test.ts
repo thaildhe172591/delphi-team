@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkStories } from './department.js'
+import { checkProjectContext, checkStories } from './department.js'
 
 /**
  * The collision check, pulled out of `planDepartment` because only `dept up` was running it.
@@ -52,5 +52,35 @@ describe('what a seat needs to do the job at all', () => {
     const problems = checkStories({ 'T-001': { files: ['src/a.ts'], acceptance: ['it works'] } })
     expect(problems).toHaveLength(1)
     expect(problems[0]?.severity).toBe('warn')
+  })
+})
+
+describe('the file every seat is told to read', () => {
+  it('warns while it is still the template', () => {
+    // Two seats on the first real run read this, found angle brackets, and worked from the
+    // story alone. Nobody was told.
+    const template = [
+      '# Project context',
+      '',
+      '## What this project is',
+      '<two or three lines>',
+      '',
+      '## How to run it',
+      '<the command>',
+    ].join('\n')
+
+    const problems = checkProjectContext(template)
+    expect(problems).toHaveLength(1)
+    expect(problems[0]?.severity).toBe('warn')
+    expect(problems[0]?.message).toContain('2 unfilled')
+  })
+
+  it('says nothing once it has been filled in', () => {
+    const filled = ['# Project context', '', '## What this project is', 'A checkout service.'].join('\n')
+    expect(checkProjectContext(filled)).toEqual([])
+  })
+
+  it('does not mistake prose that happens to contain a bracket', () => {
+    expect(checkProjectContext('Run `node --test` and see <500ms per case.')).toEqual([])
   })
 })

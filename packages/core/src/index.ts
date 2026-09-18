@@ -10,6 +10,7 @@ export {
   resolveWindowsShim,
 } from './adapters/claude.js'
 export {
+  checkProjectContext,
   checkStories,
   type DepartmentInput,
   type DepartmentPlan,

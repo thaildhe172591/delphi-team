@@ -6,6 +6,7 @@ import {
   appendLine,
   BoardSchema,
   ClaudeAdapter,
+  checkProjectContext,
   checkStories,
   isoNow,
   openTasks,
@@ -159,7 +160,10 @@ export function dispatchCommand(): Command {
       // not finished and its files are still spoken for.
       const board = await readYaml(paths.board, BoardSchema, { version: 1, tasks: [] })
       const inFlight = board.tasks.filter((task) => IN_FLIGHT.has(task.status)).map((task) => task.id)
-      const problems = checkStories(await readStories(context, slug, [...new Set([...inFlight, id])]))
+      const problems = [
+        ...checkStories(await readStories(context, slug, [...new Set([...inFlight, id])])),
+        ...checkProjectContext(await readOr(join(context.root, 'docs', 'project-context.md'), '')),
+      ]
 
       const blocks = problems.filter((problem) => problem.severity === 'block')
       for (const problem of problems.filter((p) => p.severity === 'warn')) {
@@ -168,10 +172,7 @@ export function dispatchCommand(): Command {
       if (blocks.length > 0 && !options.force) {
         throw new UserError(
           blocks.map((problem) => problem.message).join('; '),
-          `${blocks
-            .map((problem) => problem.fix)
-            .filter(Boolean)
-            .join('; ')}
+          `${[...new Set(blocks.map((problem) => problem.fix).filter(Boolean))].join('; ')}
 Or pass --force if you have already decided this is fine.`,
         )
       }

@@ -121,6 +121,27 @@ export function checkStories(stories: Record<string, StoryScope>): Problem[] {
   return problems
 }
 
+/**
+ * Every seat is told to read `docs/project-context.md` before it starts anything.
+ *
+ * When that file is still the template it shipped as, each seat spends its opening tokens on
+ * angle brackets and then works from the story alone — which is exactly what two seats
+ * reported doing on the first real run. A warning, not a block: a department can work
+ * without it, it just works with less.
+ */
+export function checkProjectContext(text: string): Problem[] {
+  const placeholders = text.split('\n').filter((line) => /^<[^>]*>$/.test(line.trim())).length
+  if (placeholders === 0) return []
+
+  return [
+    {
+      severity: 'warn',
+      message: `docs/project-context.md is still the template (${placeholders} unfilled ${placeholders === 1 ? 'line' : 'lines'})`,
+      fix: 'every seat you start is told to read it first; fill it, or they work from the story alone',
+    },
+  ]
+}
+
 export function planDepartment(input: DepartmentInput): DepartmentPlan {
   const problems: Problem[] = []
   const running = new Set(input.running ?? [])
