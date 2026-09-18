@@ -5,8 +5,8 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "delphi-team": "./dist/index.js",
-    "delphi": "./dist/index.js"
+    "delphi-team": "dist/index.js",
+    "delphi": "dist/index.js"
   },
   "main": "./dist/index.js",
   "files": [

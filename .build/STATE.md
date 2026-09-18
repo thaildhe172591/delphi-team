@@ -24,6 +24,15 @@ So v0.1.1 onwards goes: tag -> approve `npm-stage` -> the version is *staged and
 -> `npm stage approve` with 2FA. Nobody, including a compromised workflow, can put a version in
 front of a user without the owner answering a 2FA challenge.
 
+**v0.1.1 proved the automated path end to end (2026-09-18).** changeset -> `version.yml` opened
+the pull request -> CI -> merge -> tag -> release. npm went out under OIDC with no token in the
+repository at all, and the version sat *staged and uninstallable* until approved with 2FA -- the
+registry listed only 0.1.0 while 0.1.1 waited. The GitHub release came out correctly titled with
+all six platform-named binaries, which is the C-024 fix working in CI rather than by hand.
+
+It cost three more defects, all in code that had been green for days because it had nothing to do
+(C-025, and a repository setting: Actions could not open a pull request).
+
 GitHub Actions were bumped afterwards (checkout 7, setup-python 7, upload-artifact 7) and a dry
 run confirmed `upload-artifact@v7` still feeds `download-artifact@v8`. That run also showed the
 binaries hash identical to v0.1.0's, so the build is reproducible across runs.
