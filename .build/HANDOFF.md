@@ -162,6 +162,9 @@ The whole of this list came from one afternoon of actually using it, and none of
   own format line as an event**. Both fixed; both had looked right on the page for weeks.
 - **A team can name a seat the project never built**, and `dept up` held it in silence, so the review step
   went missing without anyone noticing.
+- **`delphi dispatch` ran no pre-flight at all.** Every check lived inside `planDepartment`, which only
+  `dept up` called, so two stories claiming one file were both dispatched and one seat deleted the other's
+  uncommitted work. `checkStories()` is shared now; do not move it back inside the planner (C-018).
 
 ### The largest finding
 
@@ -180,7 +183,7 @@ Phase 2c alone came from execution, not review. Do not mark work done on a readi
 ## 7. How to prove the thing works
 
 ```bash
-pnpm check                      # lint, build, typecheck, 357 tests
+pnpm check                      # lint, build, typecheck, 370 tests
 node scripts/loop-lab.mjs       # the loop end to end, for free
 node packages/cli/dist/index.js doctor
 ```

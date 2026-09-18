@@ -1,6 +1,6 @@
 # BUILD STATE
 
-Updated: 2026-09-17 evening · **Phase 5 (Automation) — DONE, and run live.** Waiting on the owner to approve Phase 6.
+Updated: 2026-09-18 · **Phase 5 (Automation) — DONE, run live, and the findings from that run closed.** Waiting on the owner to approve Phase 6.
 
 ## Current phase
 Phases 0 to 3 complete. The repository is public, CI runs on every push, and delphi is set up on itself.
@@ -43,7 +43,7 @@ scripts/            sync-version · build-binaries · build-templates
 ```
 
 ## Measured, not assumed
-- **357 tests pass**, and the CLI is installed from its own npm tarball rather than a link, so the published
+- **370 tests pass**, and the CLI is installed from its own npm tarball rather than a link, so the published
   artifact is what was exercised: 80 KB, four files, core bundled, dependencies resolve.
 - **A real department ran on a real project.** dev-be took a story from `ready` to `review` with `npm test`
   green, filed a report, handed over. The orchestrator drove it from a `claude` session and reported two
@@ -92,6 +92,15 @@ scripts/            sync-version · build-binaries · build-templates
     specified". Panes launch the resolved `.exe`. Same root as C-017, one layer out.
 13. **A team could name a seat the project never built.** `quick-fix` names a reviewer; a `feature` project
     has none, so the plan held it as "nothing assigned yet" and the review step went missing silently.
+14. **One seat destroyed another's work, and every check that would have stopped it existed.** They lived
+    inside `planDepartment`, so `dept up` ran them and `delphi dispatch` ran none. Two stories both claimed
+    `src/public/index.html`, both were dispatched, and dev-be later removed the directory while chasing a
+    test fixture. `checkStories()` is shared now and `dispatch` refuses; `review` counts as in flight
+    (C-018). Bash is still not covered — `delphi worktree` is the answer when it must be impossible.
+15. **The file every seat is told to read first was still the template.** Two seats read placeholders and
+    worked from the story alone; nothing warned anyone. Both dispatch paths warn now.
+16. **Git reported the whole ledger as changed on Windows.** delphi writes LF, git checks out CRLF. `init`
+    now pins `.delphi/**` and `.claude/**` in `.gitattributes`.
 
 Each has a test now.
 
@@ -119,7 +128,7 @@ R01-R25 to where each requirement is met.
 
 ## Quick verification commands
 ```bash
-pnpm check                      # lint, build, typecheck, 357 tests
+pnpm check                      # lint, build, typecheck, 370 tests
 node scripts/loop-lab.mjs       # the loop end to end, for free
 node packages/cli/dist/index.js doctor
 ```
