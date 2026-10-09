@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@delphi-team/core": "workspace:*",
-    "@types/vscode": "^1.95.0"
+    "@types/vscode": "^1.140.0"
   },
   "repository": {
     "type": "git",
