@@ -21,13 +21,13 @@
     "build:plugin": "node scripts/build-plugin.mjs"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
+    "@biomejs/biome": "^2.5.15",
     "@changesets/cli": "^3.0.3",
     "@types/node": "^22.19.0",
-    "@vitest/coverage-v8": "^5.0.1",
+    "@vitest/coverage-v8": "^5.0.4",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.4"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
